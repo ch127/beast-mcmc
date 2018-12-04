@@ -27,8 +27,8 @@ package dr.inference.model;
 
 import dr.math.matrixAlgebra.WrappedMatrix;
 import dr.xml.*;
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.ops.CommonOps;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
 
 import static dr.math.matrixAlgebra.missingData.MissingOps.wrapDiagonal;
 import static dr.math.matrixAlgebra.missingData.MissingOps.wrapSpherical;
@@ -39,30 +39,30 @@ import static dr.math.matrixAlgebra.missingData.MissingOps.wrapSpherical;
  */
 public class CompoundEigenMatrix extends AbstractTransformedCompoundMatrix {
 
-    private final DenseMatrix64F transformedMatrix;
+    private final DMatrixRMaj transformedMatrix;
 
     private final double[] savedTransformedMatrix;
 
     private boolean compositionKnown = false;
 
-    private final DenseMatrix64F temp;
+    private final DMatrixRMaj temp;
 
     public CompoundEigenMatrix(Parameter eigenValues, MatrixParameter eigenVectors) {
         super(eigenValues, eigenVectors);
         // Matrices
-        temp = new DenseMatrix64F(dim, dim);
-        transformedMatrix = new DenseMatrix64F(dim, dim);
+        temp = new DMatrixRMaj(dim, dim);
+        transformedMatrix = new DMatrixRMaj(dim, dim);
         computeTransformedMatrix();
         savedTransformedMatrix = new double[dim * dim];
     }
 
     private void computeTransformedMatrix() {
-        DenseMatrix64F baseMatrix = wrapSpherical(offDiagonalParameter.getParameterValues(), 0, dim);
-        DenseMatrix64F diagonalMatrix = wrapDiagonal(diagonalParameter.getParameterValues(), 0, dim);
+        DMatrixRMaj baseMatrix = wrapSpherical(offDiagonalParameter.getParameterValues(), 0, dim);
+        DMatrixRMaj diagonalMatrix = wrapDiagonal(diagonalParameter.getParameterValues(), 0, dim);
 
-        CommonOps.mult(baseMatrix, diagonalMatrix, temp);
-        CommonOps.invert(baseMatrix);
-        CommonOps.mult(temp, baseMatrix, transformedMatrix);
+        CommonOps_DDRM.mult(baseMatrix, diagonalMatrix, temp);
+        CommonOps_DDRM.invert(baseMatrix);
+        CommonOps_DDRM.mult(temp, baseMatrix, transformedMatrix);
 
         compositionKnown = true;
     }
@@ -110,7 +110,7 @@ public class CompoundEigenMatrix extends AbstractTransformedCompoundMatrix {
     }
 
     public double[] getEigenVectors() {
-        DenseMatrix64F baseMatrix = wrapSpherical(offDiagonalParameter.getParameterValues(), 0, dim);
+        DMatrixRMaj baseMatrix = wrapSpherical(offDiagonalParameter.getParameterValues(), 0, dim);
         return baseMatrix.getData();
     }
 

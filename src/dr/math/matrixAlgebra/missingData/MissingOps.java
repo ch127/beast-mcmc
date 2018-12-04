@@ -2,17 +2,17 @@ package dr.math.matrixAlgebra.missingData;
 
 import dr.inference.model.MatrixParameterInterface;
 import dr.math.matrixAlgebra.*;
-import org.ejml.alg.dense.decomposition.lu.LUDecompositionAlt_D64;
-import org.ejml.alg.dense.linsol.lu.LinearSolverLu_D64;
-import org.ejml.alg.dense.misc.UnrolledDeterminantFromMinor;
-import org.ejml.alg.dense.misc.UnrolledInverseFromMinor;
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.factory.DecompositionFactory;
-import org.ejml.factory.LinearSolverFactory;
-import org.ejml.interfaces.decomposition.SingularValueDecomposition;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
+import org.ejml.dense.row.SingularOps_DDRM;
+import org.ejml.dense.row.decomposition.lu.LUDecompositionAlt_DDRM;
+import org.ejml.dense.row.factory.DecompositionFactory_DDRM;
+import org.ejml.dense.row.factory.LinearSolverFactory_DDRM;
+import org.ejml.dense.row.linsol.lu.LinearSolverLu_DDRM;
+import org.ejml.dense.row.misc.UnrolledDeterminantFromMinor_DDRM;
+import org.ejml.dense.row.misc.UnrolledInverseFromMinor_DDRM;
+import org.ejml.interfaces.decomposition.SingularValueDecomposition_F64;
 import org.ejml.interfaces.linsol.LinearSolver;
-import org.ejml.ops.CommonOps;
-import org.ejml.ops.SingularOps;
 
 import java.util.Arrays;
 
@@ -24,65 +24,74 @@ import static dr.util.EuclideanToInfiniteNormUnitBallTransform.projection;
  */
 public class MissingOps {
 
-    public static DenseMatrix64F wrap(final double[] source, final int offset,
+    public static DMatrixRMaj wrap(final double[] source, final int offset,
                                       final int numRows, final int numCols) {
         double[] buffer = new double[numRows * numCols];
         return wrap(source, offset, numRows, numCols, buffer);
     }
 
-    public static DenseMatrix64F wrap(final double[] source, final int offset,
-                                              final int numRows, final int numCols,
-                                              final double[] buffer) {
+    public static DMatrixRMaj wrap(final double[] source, final int offset,
+                                      final int numRows, final int numCols,
+                                      final double[] buffer) {
         System.arraycopy(source, offset, buffer, 0, numRows * numCols);
-        return DenseMatrix64F.wrap(numRows, numCols, buffer);
+        return DMatrixRMaj.wrap(numRows, numCols, buffer);
     }
 
-    public static DenseMatrix64F wrap(MatrixParameterInterface A) {
+
+    public static DMatrixRMaj wrapSymmetric(final double[] source, final int offset,
+                                               final int numRows, final int numCols) {
+
+        DMatrixRMaj S = wrap(source, offset, numRows, numCols);
+        forceSymmetric(S);
+        return S;
+    }
+
+    public static DMatrixRMaj wrap(MatrixParameterInterface A) {
         return wrap(A.getParameterValues(), 0, A.getRowDimension(), A.getColumnDimension());
     }
 
-    public static DenseMatrix64F wrapDiagonal(final double[] source, final int offset,
+    public static DMatrixRMaj wrapDiagonal(final double[] source, final int offset,
                                               final int dim) {
         double[] buffer = new double[dim * dim];
         return wrapDiagonal(source, offset, dim, buffer);
     }
 
-    public static DenseMatrix64F wrapDiagonal(final double[] source, final int offset,
+    public static DMatrixRMaj wrapDiagonal(final double[] source, final int offset,
                                               final int dim,
                                               final double[] buffer) {
         for (int i = 0; i < dim; ++i) {
             buffer[i * dim + i] = source[i];
         }
-        return DenseMatrix64F.wrap(dim, dim, buffer);
+        return DMatrixRMaj.wrap(dim, dim, buffer);
     }
 
-    public static DenseMatrix64F wrapDiagonalInverse(final double[] source, final int offset,
+    public static DMatrixRMaj wrapDiagonalInverse(final double[] source, final int offset,
                                                      final int dim) {
         double[] buffer = new double[dim * dim];
         return wrapDiagonalInverse(source, offset, dim, buffer);
     }
 
-    public static DenseMatrix64F wrapDiagonalInverse(final double[] source, final int offset,
+    public static DMatrixRMaj wrapDiagonalInverse(final double[] source, final int offset,
                                                      final int dim,
                                                      final double[] buffer) {
         for (int i = 0; i < dim; ++i) {
             buffer[i * dim + i] = 1 / source[i];
         }
-        return DenseMatrix64F.wrap(dim, dim, buffer);
+        return DMatrixRMaj.wrap(dim, dim, buffer);
     }
 
-    public static DenseMatrix64F wrapSpherical(final double[] source, final int offset,
+    public static DMatrixRMaj wrapSpherical(final double[] source, final int offset,
                                                final int dim) {
         double[] buffer = new double[dim * dim];
         return wrapSpherical(source, offset, dim, buffer);
     }
 
-    public static DenseMatrix64F wrapSpherical(final double[] source, final int offset,
+    public static DMatrixRMaj wrapSpherical(final double[] source, final int offset,
                                                final int dim,
                                                final double[] buffer) {
         fillSpherical(source, offset, dim, buffer);
-        DenseMatrix64F res = DenseMatrix64F.wrap(dim, dim, buffer);
-        CommonOps.transpose(res); // Column major.
+        DMatrixRMaj res = DMatrixRMaj.wrap(dim, dim, buffer);
+        CommonOps_DDRM.transpose(res); // Column major.
         return res;
     }
 
@@ -95,23 +104,23 @@ public class MissingOps {
         }
     }
 
-    public static DenseMatrix64F copy(ReadableMatrix source) {
+    public static DMatrixRMaj copy(ReadableMatrix source) {
         final int len = source.getDim();
         double[] buffer = new double[len];
         for (int i = 0; i < len; ++i) {
             buffer[i] = source.get(i);
         }
-        return DenseMatrix64F.wrap(source.getMinorDim(), source.getMajorDim(), buffer);
+        return DMatrixRMaj.wrap(source.getMinorDim(), source.getMajorDim(), buffer);
     }
 
-    public static void copy(DenseMatrix64F source, WritableMatrix destination) {
+    public static void copy(DMatrixRMaj source, WritableMatrix destination) {
         final int len = destination.getDim();
         for (int i = 0; i < len; ++i) {
             destination.set(i, source.get(i));
         }
     }
 
-    public static void gatherRowsAndColumns(final DenseMatrix64F source, final DenseMatrix64F destination,
+    public static void gatherRowsAndColumns(final DMatrixRMaj source, final DMatrixRMaj destination,
                                                       final int[] rowIndices, final int[] colIndices) {
 
         final int rowLength = rowIndices.length;
@@ -128,7 +137,7 @@ public class MissingOps {
         }
     }
 
-    public static void scatterRowsAndColumns(final DenseMatrix64F source, final DenseMatrix64F destination,
+    public static void scatterRowsAndColumns(final DMatrixRMaj source, final DMatrixRMaj destination,
                                              final int[] rowIdices, final int[] colIndices, final boolean clear) {
         if (clear) {
             Arrays.fill(destination.getData(), 0.0);
@@ -148,7 +157,7 @@ public class MissingOps {
         }
     }
 
-    public static void unwrap(final DenseMatrix64F source, final double[] destination, final int offset) {
+    public static void unwrap(final DMatrixRMaj source, final double[] destination, final int offset) {
         System.arraycopy(source.getData(), 0, destination, offset, source.getNumElements());
     }
 
@@ -164,7 +173,7 @@ public class MissingOps {
         }
     }
 
-    public static void blockUnwrap(final DenseMatrix64F block, final double[] destination,
+    public static void blockUnwrap(final DMatrixRMaj block, final double[] destination,
                                    final int destinationOffset,
                                    final int offsetRow, final int offsetCol,
                                    final int nCols) {
@@ -175,7 +184,7 @@ public class MissingOps {
         }
     }
 
-    public static boolean anyDiagonalInfinities(DenseMatrix64F source) {
+    public static boolean anyDiagonalInfinities(DMatrixRMaj source) {
         boolean anyInfinities = false;
         for (int i = 0; i < source.getNumCols() && !anyInfinities; ++i) {
             if (Double.isInfinite(source.unsafe_get(i, i))) {
@@ -185,7 +194,7 @@ public class MissingOps {
         return anyInfinities;
     }
 
-    public static boolean allFiniteDiagonals(DenseMatrix64F source) {
+    public static boolean allFiniteDiagonals(DMatrixRMaj source) {
         boolean allFinite = true;
 
         final int length = source.getNumCols();
@@ -195,7 +204,7 @@ public class MissingOps {
         return allFinite;
     }
 
-    public static int countFiniteDiagonals(DenseMatrix64F source) {
+    public static int countFiniteDiagonals(DMatrixRMaj source) {
         final int length = source.getNumCols();
 
         int count = 0;
@@ -208,7 +217,7 @@ public class MissingOps {
         return count;
     }
 
-    public static int countZeroDiagonals(DenseMatrix64F source) {
+    public static int countZeroDiagonals(DMatrixRMaj source) {
         final int length = source.getNumCols();
 
         int count = 0;
@@ -221,7 +230,7 @@ public class MissingOps {
         return count;
     }
 
-    public static boolean allZeroDiagonals(DenseMatrix64F source) {
+    public static boolean allZeroDiagonals(DMatrixRMaj source) {
         final int length = source.getNumCols();
 
         for (int i = 0; i < length; ++i) {
@@ -232,7 +241,7 @@ public class MissingOps {
         return true;
     }
 
-    public static void getFiniteDiagonalIndices(final DenseMatrix64F source, final int[] indices) {
+    public static void getFiniteDiagonalIndices(final DMatrixRMaj source, final int[] indices) {
         final int length = source.getNumCols();
 
         int index = 0;
@@ -258,7 +267,7 @@ public class MissingOps {
         return count;
     }
 
-    public static int countFiniteNonZeroDiagonals(DenseMatrix64F source) {
+    public static int countFiniteNonZeroDiagonals(DMatrixRMaj source) {
         final int length = source.getNumCols();
 
         int count = 0;
@@ -271,7 +280,7 @@ public class MissingOps {
         return count;
     }
 
-    public static void getFiniteNonZeroDiagonalIndices(final DenseMatrix64F source, final int[] indices) {
+    public static void getFiniteNonZeroDiagonalIndices(final DMatrixRMaj source, final int[] indices) {
         final int length = source.getNumCols();
 
         int index = 0;
@@ -284,22 +293,22 @@ public class MissingOps {
         }
     }
 
-    public static void addToDiagonal(DenseMatrix64F source, double increment) {
+    public static void addToDiagonal(DMatrixRMaj source, double increment) {
         final int width = source.getNumRows();
         for (int i = 0; i < width; ++i) {
             source.unsafe_set(i,i, source.unsafe_get(i, i) + increment);
         }
     }
 
-    public static double det(DenseMatrix64F mat) {
+    public static double det(DMatrixRMaj mat) {
         int numCol = mat.getNumCols();
         int numRow = mat.getNumRows();
         if(numCol != numRow) {
             throw new IllegalArgumentException("Must be a square matrix.");
         } else if(numCol <= 6) {
-            return numCol >= 2? UnrolledDeterminantFromMinor.det(mat):mat.get(0);
+            return numCol >= 2? UnrolledDeterminantFromMinor_DDRM.det(mat):mat.get(0);
         } else {
-            LUDecompositionAlt_D64 alg = new LUDecompositionAlt_D64();
+            LUDecompositionAlt_DDRM alg = new LUDecompositionAlt_DDRM();
             if(alg.inputModified()) {
                 mat = mat.copy();
             }
@@ -308,7 +317,7 @@ public class MissingOps {
         }
     }
 
-    public static double invertAndGetDeterminant(DenseMatrix64F mat, DenseMatrix64F result, boolean log) {
+    public static double invertAndGetDeterminant(DMatrixRMaj mat, DMatrixRMaj result, boolean log) {
 
         final int numCol = mat.getNumCols();
         final int numRow = mat.getNumRows();
@@ -319,20 +328,20 @@ public class MissingOps {
         if (numCol <= 5) {
 
             if (numCol >= 2) {
-                UnrolledInverseFromMinor.inv(mat, result);
+                UnrolledInverseFromMinor_DDRM.inv(mat, result);
             } else {
                 result.set(0, 1.0D / mat.get(0));
             }
 
             double det = numCol >= 2 ?
-                    UnrolledDeterminantFromMinor.det(mat) :
+                    UnrolledDeterminantFromMinor_DDRM.det(mat) :
                     mat.get(0);
             return log ? Math.log(det) : det;
 
         } else {
 
-            LUDecompositionAlt_D64 alg = new LUDecompositionAlt_D64();
-            LinearSolverLu_D64 solver = new LinearSolverLu_D64(alg);
+            LUDecompositionAlt_DDRM alg = new LUDecompositionAlt_DDRM();
+            LinearSolverLu_DDRM solver = new LinearSolverLu_DDRM(alg);
             if (solver.modifiesA()) {
                 mat = mat.copy();
             }
@@ -348,7 +357,7 @@ public class MissingOps {
         }
     }
 
-    private static double computeLogDeterminant(LUDecompositionAlt_D64 alg) {
+    private static double computeLogDeterminant(LUDecompositionAlt_DDRM alg) {
         int n = alg.getLU().getNumCols();
         if (n != alg.getLU().getNumRows()) {
             throw new IllegalArgumentException("Must be a square matrix.");
@@ -363,7 +372,7 @@ public class MissingOps {
         }
     }
 
-    public static InversionResult safeDeterminant(DenseMatrix64F source, boolean invert) {
+    public static InversionResult safeDeterminant(DMatrixRMaj source, boolean invert) {
         final int finiteCount = countFiniteNonZeroDiagonals(source);
 
         InversionResult result;
@@ -371,19 +380,19 @@ public class MissingOps {
         if (finiteCount == 0) {
             result = new InversionResult(NOT_OBSERVED, 0, 0);
         } else {
-//            LinearSolver<DenseMatrix64F> solver = LinearSolverFactory.pseudoInverse(true);
+//            LinearSolver<DMatrixRMaj> solver = LinearSolverFactory_DDRM.pseudoInverse(true);
 //            solver.setA(source);
 //
-//            SingularValueDecomposition<DenseMatrix64F> svd = solver.getDecomposition();
+//            SingularValueDecomposition_F64<DMatrixRMaj> svd = solver.getDecomposition();
 //            double[] values = svd.getSingularValues();
 //
 //            if (values == null) {
 //                throw new RuntimeException("Unable to perform SVD");
 //            }
 
-            SingularValueDecomposition<DenseMatrix64F> svd = DecompositionFactory.svd(source.getNumRows(), source.getNumCols(), false, false, false);
+            SingularValueDecomposition_F64<DMatrixRMaj> svd = DecompositionFactory_DDRM.svd(source.getNumRows(), source.getNumCols(), false, false, false);
             if (!svd.decompose(source)) {
-                if (SingularOps.rank(svd) == 0) return new InversionResult(NOT_OBSERVED, 0, 0);
+                if (SingularOps_DDRM.rank(svd) == 0) return new InversionResult(NOT_OBSERVED, 0, 0);
                 throw new RuntimeException("SVD decomposition failed");
             }
             double[] values = svd.getSingularValues();
@@ -408,7 +417,7 @@ public class MissingOps {
         return result;
     }
 
-    public static InversionResult safeSolve(DenseMatrix64F A,
+    public static InversionResult safeSolve(DMatrixRMaj A,
                                             WrappedVector b,
                                             WrappedVector x,
                                             boolean getDeterminat) {
@@ -416,8 +425,8 @@ public class MissingOps {
 
         assert(A.getNumRows() == dim && A.getNumCols() == dim);
 
-        final DenseMatrix64F B = wrap(b.getBuffer(), b.getOffset(), dim, 1);
-        final DenseMatrix64F X = new DenseMatrix64F(dim, 1);
+        final DMatrixRMaj B = wrap(b.getBuffer(), b.getOffset(), dim, 1);
+        final DMatrixRMaj X = new DMatrixRMaj(dim, 1);
 
         InversionResult ir = safeSolve(A, B, X, getDeterminat);
 
@@ -429,7 +438,7 @@ public class MissingOps {
         return ir;
     }
 
-    public static InversionResult safeSolve(DenseMatrix64F A, DenseMatrix64F B, DenseMatrix64F X, boolean getDeterminant) {
+    public static InversionResult safeSolve(DMatrixRMaj A, DMatrixRMaj B, DMatrixRMaj X, boolean getDeterminant) {
 
         final int finiteCount = countFiniteNonZeroDiagonals(A);
 
@@ -439,7 +448,7 @@ public class MissingOps {
             result = new InversionResult(NOT_OBSERVED, 0, 0);
         } else {
 
-            LinearSolver<DenseMatrix64F> solver = LinearSolverFactory.pseudoInverse(true);
+            LinearSolver<DMatrixRMaj,DMatrixRMaj> solver = LinearSolverFactory_DDRM.pseudoInverse(true);
             solver.setA(A);
             solver.solve(B, X);
 
@@ -447,17 +456,17 @@ public class MissingOps {
             double logDet = 0;
 
             if (getDeterminant) {
-//                SingularValueDecomposition<DenseMatrix64F> svd = solver.getDecomposition();
+//                SingularValueDecomposition_F64<DMatrixRMaj> svd = solver.getDecomposition();
 //                double[] values = svd.getSingularValues();
 
-                SingularValueDecomposition<DenseMatrix64F> svd = DecompositionFactory.svd(A.getNumRows(), A.getNumCols(), false, false, false);
+                SingularValueDecomposition_F64<DMatrixRMaj> svd = DecompositionFactory_DDRM.svd(A.getNumRows(), A.getNumCols(), false, false, false);
                 if (!svd.decompose(A)) {
-                    if (SingularOps.rank(svd) == 0) return new InversionResult(NOT_OBSERVED, 0, 0);
+                    if (SingularOps_DDRM.rank(svd) == 0) return new InversionResult(NOT_OBSERVED, 0, 0);
                     throw new RuntimeException("SVD decomposition failed");
                 }
                 double[] values = svd.getSingularValues();
 
-//                double eps = SingularOps.singularThreshold(svd);
+//                double eps = SingularOps_DDRM.singularThreshold(svd);
 
                 for (int i = 0; i < values.length; ++i) {
                     final double lambda = values[i];
@@ -474,15 +483,15 @@ public class MissingOps {
         return result;
     }
 
-    public static void safeSolveSymmPosDef(DenseMatrix64F A,
+    public static void safeSolveSymmPosDef(DMatrixRMaj A,
                                            WrappedVector b,
                                            WrappedVector x) {
         final int dim = b.getDim();
 
         assert (A.getNumRows() == dim && A.getNumCols() == dim);
 
-        final DenseMatrix64F B = wrap(b.getBuffer(), b.getOffset(), dim, 1);
-        final DenseMatrix64F X = new DenseMatrix64F(dim, 1);
+        final DMatrixRMaj B = wrap(b.getBuffer(), b.getOffset(), dim, 1);
+        final DMatrixRMaj X = new DMatrixRMaj(dim, 1);
 
         safeSolveSymmPosDef(A, B, X);
 
@@ -492,7 +501,7 @@ public class MissingOps {
         }
     }
 
-    public static void safeSolveSymmPosDef(DenseMatrix64F A, DenseMatrix64F B, DenseMatrix64F X) {
+    public static void safeSolveSymmPosDef(DMatrixRMaj A, DMatrixRMaj B, DMatrixRMaj X) {
 
         final int finiteCount = countFiniteNonZeroDiagonals(A);
 
@@ -500,12 +509,12 @@ public class MissingOps {
         if (finiteCount == 0) {
             Arrays.fill(X.getData(), 0);
         } else {
-            LinearSolver<DenseMatrix64F> solver = LinearSolverFactory.symmPosDef(A.getNumCols());
-            DenseMatrix64F Abis = new DenseMatrix64F(A);
+            LinearSolver<DMatrixRMaj,DMatrixRMaj> solver = LinearSolverFactory_DDRM.symmPosDef(A.getNumCols());
+            DMatrixRMaj Abis = new DMatrixRMaj(A);
             if(solver.setA(Abis)) {
                 solver.solve(B, X);
             } else {
-                LinearSolver<DenseMatrix64F> solverSVD = LinearSolverFactory.pseudoInverse(true);
+                LinearSolver<DMatrixRMaj,DMatrixRMaj> solverSVD = LinearSolverFactory_DDRM.pseudoInverse(true);
                 solverSVD.setA(A);
                 solverSVD.solve(B, X);
             }
@@ -520,13 +529,12 @@ public class MissingOps {
 
         if (finiteCount == dim) {
 
-            DenseMatrix64F result = new DenseMatrix64F(dim, dim);
-            DenseMatrix64F copyOfSource = copy(source);
+            DMatrixRMaj result = new DMatrixRMaj(dim, dim);
+            DMatrixRMaj copyOfSource = copy(source);
             if (getDeterminant) {
                 logDet = invertAndGetDeterminant(copyOfSource, result, true);
             } else {
-//                CommonOps.invert(copyOfSource, result);
-                symmPosDefInvert(copyOfSource, result);
+                CommonOps_DDRM.invertSPD(copyOfSource, result);
             }
 
             copy(result, destination);
@@ -537,7 +545,7 @@ public class MissingOps {
         return null;
     }
 
-    public static InversionResult safeInvert(DenseMatrix64F source, DenseMatrix64F destination, boolean getDeterminant) {
+    public static InversionResult safeInvert(DMatrixRMaj source, DMatrixRMaj destination, boolean getDeterminant) {
 
         final int dim = source.getNumCols();
         final int finiteCount = countFiniteNonZeroDiagonals(source);
@@ -547,8 +555,7 @@ public class MissingOps {
             if (getDeterminant) {
                 logDet = invertAndGetDeterminant(source, destination, true);
             } else {
-//                CommonOps.invert(source, destination);
-                symmPosDefInvert(source, destination);
+                CommonOps_DDRM.invertSPD(source, destination);
             }
             return new InversionResult(FULLY_OBSERVED, dim, logDet, true);
         } else {
@@ -559,15 +566,14 @@ public class MissingOps {
                 final int[] finiteIndices = new int[finiteCount];
                 getFiniteNonZeroDiagonalIndices(source, finiteIndices);
 
-                final DenseMatrix64F subSource = new DenseMatrix64F(finiteCount, finiteCount);
+                final DMatrixRMaj subSource = new DMatrixRMaj(finiteCount, finiteCount);
                 gatherRowsAndColumns(source, subSource, finiteIndices, finiteIndices);
 
-                final DenseMatrix64F inverseSubSource = new DenseMatrix64F(finiteCount, finiteCount);
+                final DMatrixRMaj inverseSubSource = new DMatrixRMaj(finiteCount, finiteCount);
                 if (getDeterminant) {
                     logDet = invertAndGetDeterminant(subSource, inverseSubSource, true);
                 } else {
-//                    CommonOps.invert(subSource, inverseSubSource);
-                    symmPosDefInvert(subSource, inverseSubSource);
+                    CommonOps_DDRM.invertSPD(subSource, inverseSubSource);
                 }
 
                 scatterRowsAndColumns(inverseSubSource, destination, finiteIndices, finiteIndices, true);
@@ -577,14 +583,7 @@ public class MissingOps {
         }
     }
 
-    public static void symmPosDefInvert(DenseMatrix64F P, DenseMatrix64F P_inv) {
-        LinearSolver<DenseMatrix64F> solver = LinearSolverFactory.symmPosDef(P.getNumCols());
-        DenseMatrix64F Pbis = new DenseMatrix64F(P);
-        if( !solver.setA(Pbis) ) throw new RuntimeException("Invert failed");
-        solver.invert(P_inv);
-    }
-
-    public static void matrixVectorMultiple(final DenseMatrix64F A,
+    public static void matrixVectorMultiple(final DMatrixRMaj A,
                                        final WrappedVector x,
                                        final WrappedVector y,
                                        final int dim) {
@@ -608,11 +607,11 @@ public class MissingOps {
     private static double[] buffer = new double[16];
 
     public static void safeWeightedAverage(final WrappedVector mi,
-                                           final DenseMatrix64F Pi,
+                                           final DMatrixRMaj Pi,
                                            final WrappedVector mj,
-                                           final DenseMatrix64F Pj,
+                                           final DMatrixRMaj Pj,
                                            final WrappedVector mk,
-                                           final DenseMatrix64F Vk,
+                                           final DMatrixRMaj Vk,
                                            final int dimTrait) {
 //        countZeroDiagonals(Vk);
         final double[] tmp = new double[dimTrait];
@@ -650,11 +649,11 @@ public class MissingOps {
     }
 
     public static void weightedAverage(final ReadableVector mi,
-                                       final DenseMatrix64F Pi,
+                                       final DMatrixRMaj Pi,
                                        final ReadableVector mj,
-                                       final DenseMatrix64F Pj,
+                                       final DMatrixRMaj Pj,
                                        final WritableVector mk,
-                                       final DenseMatrix64F Vk,
+                                       final DMatrixRMaj Vk,
                                        final int dimTrait) {
         final double[] tmp = new double[dimTrait];
         for (int g = 0; g < dimTrait; ++g) {
@@ -701,13 +700,13 @@ public class MissingOps {
 
     public static void weightedAverage(final double[] ipartial,
                                        final int ibo,
-                                       final DenseMatrix64F Pi,
+                                       final DMatrixRMaj Pi,
                                        final double[] jpartial,
                                        final int jbo,
-                                       final DenseMatrix64F Pj,
+                                       final DMatrixRMaj Pj,
                                        final double[] kpartial,
                                        final int kbo,
-                                       final DenseMatrix64F Vk,
+                                       final DMatrixRMaj Vk,
                                        final int dimTrait) {
         final double[] tmp = new double[dimTrait];
         weightedAverage(ipartial, ibo, Pi, jpartial, jbo, Pj, kpartial, kbo, Vk, dimTrait, tmp);
@@ -715,10 +714,10 @@ public class MissingOps {
 
     public static void weightedSum(final double[] ipartial,
                                        final int ibo,
-                                       final DenseMatrix64F Pi,
+                                       final DMatrixRMaj Pi,
                                        final double[] jpartial,
                                        final int jbo,
-                                       final DenseMatrix64F Pj,
+                                       final DMatrixRMaj Pj,
                                        final int dimTrait,
                                        final double[] out) {
         for (int g = 0; g < dimTrait; ++g) {
@@ -733,12 +732,12 @@ public class MissingOps {
 
     public static void weightedSumActualized(final double[] ipartial,
                                              final int ibo,
-                                             final DenseMatrix64F Pi,
+                                             final DMatrixRMaj Pi,
                                              final double[] iactualization,
                                              final int ido,
                                              final double[] jpartial,
                                              final int jbo,
-                                             final DenseMatrix64F Pj,
+                                             final DMatrixRMaj Pj,
                                              final double[] jactualization,
                                              final int jdo,
                                              final int dimTrait,
@@ -755,13 +754,13 @@ public class MissingOps {
 
     public static void weightedAverage(final double[] ipartial,
                                        final int ibo,
-                                       final DenseMatrix64F Pi,
+                                       final DMatrixRMaj Pi,
                                        final double[] jpartial,
                                        final int jbo,
-                                       final DenseMatrix64F Pj,
+                                       final DMatrixRMaj Pj,
                                        final double[] kpartial,
                                        final int kbo,
-                                       final DenseMatrix64F Vk,
+                                       final DMatrixRMaj Vk,
                                        final int dimTrait,
                                        final double[] tmp) {
         weightedSum(ipartial, ibo, Pi, jpartial, jbo, Pj, dimTrait, tmp);
@@ -776,7 +775,7 @@ public class MissingOps {
 
     public static double weightedInnerProduct(final double[] partials,
                                               final int bo,
-                                              final DenseMatrix64F P,
+                                              final DMatrixRMaj P,
                                               final int dimTrait) {
         double SS = 0;
 
@@ -796,7 +795,7 @@ public class MissingOps {
                                                            final int source1Offset,
                                                            final double[] source2,
                                                            final int source2Offset,
-                                                           final DenseMatrix64F P,
+                                                           final DMatrixRMaj P,
                                                            final int dimTrait) {
         double SS = 0;
         for (int g = 0; g < dimTrait; ++g) {
@@ -816,13 +815,13 @@ public class MissingOps {
 
     public static double weightedThreeInnerProduct(final double[] ipartials,
                                                    final int ibo,
-                                                   final DenseMatrix64F Pip,
+                                                   final DMatrixRMaj Pip,
                                                    final double[] jpartials,
                                                    final int jbo,
-                                                   final DenseMatrix64F Pjp,
+                                                   final DMatrixRMaj Pjp,
                                                    final double[] kpartials,
                                                    final int kbo,
-                                                   final DenseMatrix64F Pk,
+                                                   final DMatrixRMaj Pk,
                                                    final int dimTrait) {
 
         // TODO Is it better to split into 3 separate calls to weightedInnerProduct?
@@ -866,14 +865,14 @@ public class MissingOps {
         }
     }
 
-    public static void forceSymmetric(DenseMatrix64F P) {
-        DenseMatrix64F Ptrans = new DenseMatrix64F(P);
-        CommonOps.transpose(P, Ptrans);
-        CommonOps.addEquals(P, Ptrans);
-        CommonOps.scale(0.5, P);
+    public static void forceSymmetric(DMatrixRMaj P) {
+        DMatrixRMaj Ptrans = new DMatrixRMaj(P);
+        CommonOps_DDRM.transpose(P, Ptrans);
+        CommonOps_DDRM.addEquals(P, Ptrans);
+        CommonOps_DDRM.scale(0.5, P);
     }
 
-    public static void symmetricMult(DenseMatrix64F Q, DenseMatrix64F P, DenseMatrix64F QtPQ) {
+    public static void symmetricMult(DMatrixRMaj Q, DMatrixRMaj P, DMatrixRMaj QtPQ) {
         int dimTrait = Q.getNumCols();
         assert dimTrait == Q.getNumRows() && dimTrait == P.getNumCols() && dimTrait == P.getNumRows();
         for (int i = 0; i < dimTrait; i++) {

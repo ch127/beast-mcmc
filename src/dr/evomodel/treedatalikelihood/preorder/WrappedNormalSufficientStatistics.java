@@ -5,7 +5,7 @@ import dr.math.matrixAlgebra.ReadableMatrix;
 import dr.math.matrixAlgebra.ReadableVector;
 import dr.math.matrixAlgebra.WrappedMatrix;
 import dr.math.matrixAlgebra.WrappedVector;
-import org.ejml.data.DenseMatrix64F;
+import org.ejml.data.DMatrixRMaj;
 
 /**
  * @author Marc A. Suchard
@@ -29,7 +29,7 @@ public class WrappedNormalSufficientStatistics {
     public WrappedNormalSufficientStatistics(double[] buffer,
                                              int index,
                                              int dim,
-                                             DenseMatrix64F Pd,
+                                             DMatrixRMaj Pd,
                                              PrecisionType precisionType) {
 
         int partialOffset = (dim + precisionType.getMatrixLength(dim)) * index;

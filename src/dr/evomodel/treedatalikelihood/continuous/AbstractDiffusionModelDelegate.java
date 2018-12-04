@@ -33,8 +33,8 @@ import dr.inference.model.AbstractModel;
 import dr.inference.model.Model;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.ops.CommonOps;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
 
 import java.io.Serializable;
 
@@ -204,7 +204,7 @@ public abstract class AbstractDiffusionModelDelegate extends AbstractModel imple
     }
 
     @Override
-    public void getGradientPrecision(double scalar, DenseMatrix64F gradient) {
-        CommonOps.scale(scalar, gradient);
+    public void getGradientPrecision(double scalar, DMatrixRMaj gradient) {
+        CommonOps_DDRM.scale(scalar, gradient);
     }
 }

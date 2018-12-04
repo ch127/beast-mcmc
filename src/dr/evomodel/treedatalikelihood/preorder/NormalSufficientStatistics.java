@@ -2,7 +2,7 @@ package dr.evomodel.treedatalikelihood.preorder;
 
 import dr.evomodel.treedatalikelihood.continuous.cdi.PrecisionType;
 import dr.math.matrixAlgebra.missingData.MissingOps;
-import org.ejml.data.DenseMatrix64F;
+import org.ejml.data.DMatrixRMaj;
 
 import static dr.math.matrixAlgebra.missingData.MissingOps.safeInvert;
 
@@ -11,20 +11,20 @@ import static dr.math.matrixAlgebra.missingData.MissingOps.safeInvert;
  */
 public class NormalSufficientStatistics {
 
-    private final DenseMatrix64F mean;
-    private final DenseMatrix64F precision;
+    private final DMatrixRMaj mean;
+    private final DMatrixRMaj precision;
 
-    private DenseMatrix64F variance = null;
+    private DMatrixRMaj variance = null;
 
     NormalSufficientStatistics(double[] buffer,
                                       int index,
                                       int dim,
-                                      DenseMatrix64F Pd,
+                                      DMatrixRMaj Pd,
                                       PrecisionType precisionType) {
 
         int partialOffset = (dim + precisionType.getMatrixLength(dim)) * index;
         this.mean = MissingOps.wrap(buffer, partialOffset, dim, 1);
-        this.precision = DenseMatrix64F.wrap(dim, dim,
+        this.precision = DMatrixRMaj.wrap(dim, dim,
                 precisionType.getScaledPrecision(buffer, partialOffset, Pd.data, dim));
 
     }
@@ -34,28 +34,28 @@ public class NormalSufficientStatistics {
                                       double[] precision,
                                       int index,
                                       int dim,
-                                      DenseMatrix64F Pd,
+                                      DMatrixRMaj Pd,
                                       PrecisionType precisionType) {
 
         int meanOffset = dim * index;
         this.mean = MissingOps.wrap(mean, meanOffset, dim, 1);
 
         int precisionOffset = (dim * dim) * index;
-//        this.precision = new DenseMatrix64F(dim, dim);
+//        this.precision = new DMatrixRMaj(dim, dim);
         this.precision = MissingOps.wrap(precision, precisionOffset, dim, dim);
-//                DenseMatrix64F.wrap(dim, dim,
+//                DMatrixRMaj.wrap(dim, dim,
 //                        precisionType.getScaledPrecision(precision, precisionOffset, Pd.data, dim));
 
     }
 
     @SuppressWarnings("unused")
-    public NormalSufficientStatistics(DenseMatrix64F mean,
-                                      DenseMatrix64F precision) {
+    public NormalSufficientStatistics(DMatrixRMaj mean,
+                                      DMatrixRMaj precision) {
         this.mean = mean;
         this.precision = precision;
     }
 
-    public NormalSufficientStatistics(DenseMatrix64F mean, DenseMatrix64F precision, DenseMatrix64F variance) {
+    public NormalSufficientStatistics(DMatrixRMaj mean, DMatrixRMaj precision, DMatrixRMaj variance) {
         this.mean = mean;
         this.precision = precision;
         this.variance = variance;
@@ -71,7 +71,7 @@ public class NormalSufficientStatistics {
 
     public double getVariance(int row, int col) {
         if (variance == null) {
-            variance = new DenseMatrix64F(precision.numRows, precision.numCols);
+            variance = new DMatrixRMaj(precision.numRows, precision.numCols);
             safeInvert(precision, variance, false);
         }
 
@@ -79,15 +79,15 @@ public class NormalSufficientStatistics {
     }
 
     @Deprecated
-    public DenseMatrix64F getRawPrecision() { return precision; }
+    public DMatrixRMaj getRawPrecision() { return precision; }
 
     @Deprecated
-    public DenseMatrix64F getRawMean() { return mean; }
+    public DMatrixRMaj getRawMean() { return mean; }
 
     @Deprecated
-    public DenseMatrix64F getRawVariance() {
+    public DMatrixRMaj getRawVariance() {
         if (variance == null) { // TODO Code duplication
-            variance = new DenseMatrix64F(precision.numRows, precision.numCols);
+            variance = new DMatrixRMaj(precision.numRows, precision.numCols);
             safeInvert(precision, variance, false);
         }
 
@@ -107,7 +107,7 @@ public class NormalSufficientStatistics {
         return sb.toString();
     }
 
-    public static String toVectorizedString(DenseMatrix64F matrix) {
+    public static String toVectorizedString(DMatrixRMaj matrix) {
         return toVectorizedString(matrix.getData());
     }
 

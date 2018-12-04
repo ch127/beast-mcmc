@@ -33,7 +33,7 @@ import dr.evomodelxml.treelikelihood.TreeTraitParserUtilities;
 import dr.inference.model.*;
 import dr.math.matrixAlgebra.missingData.MissingOps;
 import dr.xml.*;
-import org.ejml.data.DenseMatrix64F;
+import org.ejml.data.DMatrixRMaj;
 
 import java.util.List;
 
@@ -80,13 +80,13 @@ public class RepeatedMeasuresTraitDataModel extends
 
         double[] partial = super.getTipPartial(taxonIndex, fullyObserved);
 
-        DenseMatrix64F V = MissingOps.wrap(partial,dimTrait + dimTrait * dimTrait, dimTrait, dimTrait);
+        DMatrixRMaj V = MissingOps.wrap(partial,dimTrait + dimTrait * dimTrait, dimTrait, dimTrait);
 
         for (int index = 0; index< dimTrait; index++){
             V.set(index, index, V.get(index, index) + 1 / samplingPrecision.getParameterValue(index));
         }
 
-        DenseMatrix64F P = new DenseMatrix64F(dimTrait, dimTrait);
+        DMatrixRMaj P = new DMatrixRMaj(dimTrait, dimTrait);
         MissingOps.safeInvert(V, P, false);
 
         MissingOps.unwrap(P, partial, dimTrait);

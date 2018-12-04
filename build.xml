@@ -168,9 +168,9 @@
             <zipgroupfileset dir="${lib}" includes="colt.jar"/>
             <zipgroupfileset dir="${lib}" includes="beagle.jar"/>
             <zipgroupfileset dir="${lib}" includes="beagle.jar"/>
-            <zipgroupfileset dir="${lib}" includes="EJML-core-0.30.jar"/>
+            <zipgroupfileset dir="${lib}" includes="ejml-core-0.37.jar"/>
             <zipgroupfileset dir="${lib}" includes="lbfgs4j-0.2.1.jar"/>
-            <zipgroupfileset dir="${lib}" includes="EJML-dense64-0.30.jar"/>
+            <zipgroupfileset dir="${lib}" includes="ejml-ddense-0.37.jar"/>
         </jar>
 
         <!-- Put everything in ${build} into the beauti.jar file -->

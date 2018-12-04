@@ -29,8 +29,8 @@ import dr.math.matrixAlgebra.Matrix;
 import dr.math.matrixAlgebra.ReadableMatrix;
 import dr.math.matrixAlgebra.WrappedMatrix;
 import dr.math.matrixAlgebra.WritableMatrix;
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.ops.CommonOps;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
 
 /**
  * @author Marc Suchard
@@ -104,9 +104,9 @@ public class CachedMatrixInverse extends CompoundParameter implements MatrixPara
         
         if (EMJL) {
             // TODO Avoid multiple copies
-            DenseMatrix64F source = new DenseMatrix64F(base.getParameterAsMatrix());
-            DenseMatrix64F destination = new DenseMatrix64F(getColumnDimension(), getColumnDimension());
-            CommonOps.invert(source, destination);
+            DMatrixRMaj source = new DMatrixRMaj(base.getParameterAsMatrix());
+            DMatrixRMaj destination = new DMatrixRMaj(getColumnDimension(), getColumnDimension());
+            CommonOps_DDRM.invert(source, destination);
             inverse = new WrappedMatrix.WrappedDenseMatrix(destination);
         } else {
          inverse = new WrappedMatrix.ArrayOfArray(new Matrix(base.getParameterAsMatrix()).inverse().toComponents());
@@ -194,7 +194,7 @@ public class CachedMatrixInverse extends CompoundParameter implements MatrixPara
         if (inverse != null) {
 
             if (savedInverse == null) {
-                savedInverse = new WrappedMatrix.WrappedDenseMatrix(new DenseMatrix64F(dim ,dim));
+                savedInverse = new WrappedMatrix.WrappedDenseMatrix(new DMatrixRMaj(dim ,dim));
             }
             copy(inverse, savedInverse);
         }

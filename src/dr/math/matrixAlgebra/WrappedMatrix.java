@@ -27,7 +27,7 @@ package dr.math.matrixAlgebra;
 
 import dr.inference.model.MatrixParameterInterface;
 import dr.inference.model.Variable;
-import org.ejml.data.DenseMatrix64F;
+import org.ejml.data.DMatrixRMaj;
 
 import java.util.Arrays;
 
@@ -93,9 +93,9 @@ public interface WrappedMatrix extends ReadableMatrix, WritableVector, WritableM
 
     final class WrappedDenseMatrix extends Base {
 
-        private final DenseMatrix64F matrix;
+        private final DMatrixRMaj matrix;
 
-        public WrappedDenseMatrix(DenseMatrix64F matrix) {
+        public WrappedDenseMatrix(DMatrixRMaj matrix) {
             this.matrix = matrix;
         }
 

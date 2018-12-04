@@ -25,15 +25,16 @@
 
 package dr.math.distributions;
 
-import java.util.Arrays;
 import dr.inference.model.GradientProvider;
 import dr.inference.model.HessianProvider;
 import dr.inference.model.Likelihood;
 import dr.math.MathUtils;
 import dr.math.matrixAlgebra.*;
-import org.ejml.alg.dense.decomposition.TriangularSolver;
-import org.ejml.alg.dense.decomposition.chol.CholeskyDecompositionInner_D64;
-import org.ejml.data.DenseMatrix64F;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.decomposition.TriangularSolver_DDRM;
+import org.ejml.dense.row.decomposition.chol.CholeskyDecompositionInner_DDRM;
+
+import java.util.Arrays;
 
 /**
  * @author Marc Suchard
@@ -339,8 +340,8 @@ public class MultivariateNormalDistribution implements MultivariateDistribution,
 
         final int dim = mean.length;
 
-        DenseMatrix64F p = DenseMatrix64F.wrap(dim,dim, precision);
-        CholeskyDecompositionInner_D64 dd = new CholeskyDecompositionInner_D64();
+        DMatrixRMaj p = DMatrixRMaj.wrap(dim,dim, precision);
+        CholeskyDecompositionInner_DDRM dd = new CholeskyDecompositionInner_DDRM();
         dd.decompose(p); // Now holds Cholesky decomposition (destructive)
 
         double[] epsilon = new double[dim];
@@ -349,7 +350,7 @@ public class MultivariateNormalDistribution implements MultivariateDistribution,
         }
 
         // Back-solve
-        TriangularSolver.solveTranL(p.getData(), epsilon, dim);
+        TriangularSolver_DDRM.solveTranL(p.getData(), epsilon, dim);
 
         for (int i = 0; i < dim; ++i) {
             epsilon[i] += mean[i];

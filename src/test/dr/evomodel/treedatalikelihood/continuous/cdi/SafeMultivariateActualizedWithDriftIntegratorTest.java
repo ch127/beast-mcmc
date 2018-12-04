@@ -3,11 +3,11 @@ package test.dr.evomodel.treedatalikelihood.continuous.cdi;
 import dr.evomodel.treedatalikelihood.continuous.cdi.PrecisionType;
 import dr.evomodel.treedatalikelihood.continuous.cdi.SafeMultivariateActualizedWithDriftIntegrator;
 import dr.math.matrixAlgebra.missingData.MissingOps;
-import org.ejml.data.Complex64F;
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.factory.DecompositionFactory;
-import org.ejml.interfaces.decomposition.EigenDecomposition;
-import org.ejml.ops.EigenOps;
+import org.ejml.data.Complex_F64;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.EigenOps_DDRM;
+import org.ejml.dense.row.factory.DecompositionFactory_DDRM;
+import org.ejml.interfaces.decomposition.EigenDecomposition_F64;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -38,22 +38,22 @@ public class SafeMultivariateActualizedWithDriftIntegratorTest {
 
         abstract class Basic implements Instance {
 
-            private EigenDecomposition decomposeStrenghtOfSelection(double[] Aparam) {
+            private EigenDecomposition_F64 decomposeStrenghtOfSelection(double[] Aparam) {
                 int n = getDimTrait();
-                DenseMatrix64F A = MissingOps.wrap(Aparam, 0, n, n);
+                DMatrixRMaj A = MissingOps.wrap(Aparam, 0, n, n);
                 // Decomposition
-                EigenDecomposition eigA = DecompositionFactory.eig(n, true, false);
+                EigenDecomposition_F64 eigA = DecompositionFactory_DDRM.eig(n, true, false);
                 if (!eigA.decompose(A)) throw new RuntimeException("Eigen decomposition failed.");
                 return eigA;
             }
 
-            final EigenDecomposition eigenDecompositionStrengthOfSelection = decomposeStrenghtOfSelection(getSelectionStrength());
+            final EigenDecomposition_F64 eigenDecompositionStrengthOfSelection = decomposeStrenghtOfSelection(getSelectionStrength());
 
             public double[] getEigenValuesStrengthOfSelection() {
                 int dim = getDimTrait();
                 double[] eigA = new double[dim];
                 for (int p = 0; p < dim; ++p) {
-                    Complex64F ev = eigenDecompositionStrengthOfSelection.getEigenvalue(p);
+                    Complex_F64 ev = eigenDecompositionStrengthOfSelection.getEigenvalue(p);
                     if (!ev.isReal())
                         throw new RuntimeException("Selection strength A should only have real eigenvalues.");
                     eigA[p] = ev.real;
@@ -62,7 +62,7 @@ public class SafeMultivariateActualizedWithDriftIntegratorTest {
             }
 
             public double[] getEigenVectorsStrengthOfSelection() {
-                return EigenOps.createMatrixV(eigenDecompositionStrengthOfSelection).data;
+                return EigenOps_DDRM.createMatrixV(eigenDecompositionStrengthOfSelection).data;
             }
 
         }
@@ -204,7 +204,7 @@ public class SafeMultivariateActualizedWithDriftIntegratorTest {
         public double[] getStationaryVariance() {
             return new double[]{
                     0.2862183, -0.2550763,
-                    -0.2550763,  0.5129428
+                    -0.2550763, 0.5129428
             };
         }
     };

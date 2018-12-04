@@ -25,13 +25,8 @@
 
 package dr.inferencexml.hmc;
 
-import dr.inference.model.Bounds;
 import dr.inference.model.Parameter;
-import dr.math.matrixAlgebra.Vector;
 import dr.xml.*;
-import org.ejml.alg.dense.decomposition.eig.watched.WatchedDoubleStepQREigenvector;
-
-import java.util.Arrays;
 
 /**
  * @author Marc A. Suchard

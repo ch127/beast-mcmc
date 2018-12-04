@@ -29,8 +29,8 @@ import dr.inference.hmc.GradientWrtParameterProvider;
 import dr.inference.model.*;
 import dr.math.matrixAlgebra.Vector;
 import dr.xml.Reportable;
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.ops.CommonOps;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
 
 /**
  * @author Paul Bastide
@@ -264,15 +264,15 @@ public abstract class AbstractPrecisionGradient implements GradientWrtParameterP
 
         class InverseGeneral implements MultivariateChainRule {
 
-            private final DenseMatrix64F vecP;
-            private final DenseMatrix64F temp;
+            private final DMatrixRMaj vecP;
+            private final DMatrixRMaj temp;
             private final int dim;
 
 
             InverseGeneral(double[] vecP) {
                 this.dim = (int) Math.sqrt(vecP.length);
-                this.vecP = DenseMatrix64F.wrap(dim, dim, vecP);
-                this.temp = new DenseMatrix64F(dim, dim);
+                this.vecP = DMatrixRMaj.wrap(dim, dim, vecP);
+                this.temp = new DMatrixRMaj(dim, dim);
             }
 
             @Override
@@ -280,11 +280,11 @@ public abstract class AbstractPrecisionGradient implements GradientWrtParameterP
 
                 assert lhs.length == dim * dim;
 
-                DenseMatrix64F gradient = new DenseMatrix64F(dim, dim);
+                DMatrixRMaj gradient = new DMatrixRMaj(dim, dim);
 
-                DenseMatrix64F LHS = DenseMatrix64F.wrap(dim, dim, lhs);
-                CommonOps.mult(vecP, LHS, temp);
-                CommonOps.mult(-1, temp, vecP, gradient);
+                DMatrixRMaj LHS = DMatrixRMaj.wrap(dim, dim, lhs);
+                CommonOps_DDRM.mult(vecP, LHS, temp);
+                CommonOps_DDRM.mult(-1, temp, vecP, gradient);
 
                 return gradient.getData();
             }

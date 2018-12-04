@@ -27,7 +27,7 @@ package dr.evomodel.treedatalikelihood.preorder;
 
 import dr.evomodel.treedatalikelihood.continuous.cdi.PrecisionType;
 import dr.math.matrixAlgebra.missingData.MissingOps;
-import org.ejml.data.DenseMatrix64F;
+import org.ejml.data.DMatrixRMaj;
 
 /**
  * @author Marc A. Suchard
@@ -36,14 +36,14 @@ import org.ejml.data.DenseMatrix64F;
 
 public class MatrixSufficientStatistics extends NormalSufficientStatistics {
 
-    private final DenseMatrix64F actualization;
+    private final DMatrixRMaj actualization;
 
     MatrixSufficientStatistics(double[] displacement,
                                double[] precision,
                                double[] actualization,
                                int index,
                                int dim,
-                               DenseMatrix64F Pd,
+                               DMatrixRMaj Pd,
                                PrecisionType precisionType) {
 
         super(displacement, precision, index, dim, Pd, precisionType);
@@ -61,11 +61,11 @@ public class MatrixSufficientStatistics extends NormalSufficientStatistics {
         return actualization.unsafe_get(row, col);
     }
 
-    public DenseMatrix64F getRawDisplacement() {
+    public DMatrixRMaj getRawDisplacement() {
         return getRawMean();
     }
 
-    public DenseMatrix64F getRawActualization() {
+    public DMatrixRMaj getRawActualization() {
         return actualization;
     }
 

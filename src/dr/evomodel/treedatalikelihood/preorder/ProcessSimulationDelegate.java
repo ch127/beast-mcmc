@@ -36,8 +36,8 @@ import dr.inference.model.Model;
 import dr.inference.model.ModelListener;
 import dr.math.matrixAlgebra.*;
 import dr.math.matrixAlgebra.CholeskyDecomposition;
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.factory.DecompositionFactory;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.factory.DecompositionFactory_DDRM;
 
 import java.util.List;
 import java.util.Map;
@@ -165,8 +165,8 @@ public interface ProcessSimulationDelegate extends ProcessOnTreeDelegate, TreeTr
         final ContinuousDataLikelihoodDelegate likelihoodDelegate;
 
         double[] diffusionVariance;
-        DenseMatrix64F Vd;
-        DenseMatrix64F Pd;
+        DMatrixRMaj Vd;
+        DMatrixRMaj Pd;
 
         double[][] cholesky;
         Map<PartiallyMissingInformation.HashedIntArray,
@@ -230,7 +230,7 @@ public interface ProcessSimulationDelegate extends ProcessOnTreeDelegate, TreeTr
                 double[][] diffusionPrecision = diffusionModel.getPrecisionmatrix();
                 diffusionVariance = getVectorizedVarianceFromPrecision(diffusionPrecision);
                 Vd = wrap(diffusionVariance, 0, dimTrait, dimTrait);
-                Pd = new DenseMatrix64F(diffusionPrecision);
+                Pd = new DMatrixRMaj(diffusionPrecision);
             }
             if (cholesky == null) {
                 cholesky = getCholeskyOfVariance(diffusionVariance, dimTrait);
@@ -259,10 +259,10 @@ public interface ProcessSimulationDelegate extends ProcessOnTreeDelegate, TreeTr
             return CholeskyDecomposition.execute(variance, 0, dim);
         }
 
-        static DenseMatrix64F getCholeskyOfVariance(DenseMatrix64F variance, final int dim) {
+        static DMatrixRMaj getCholeskyOfVariance(DMatrixRMaj variance, final int dim) {
 
-            org.ejml.interfaces.decomposition.CholeskyDecomposition<DenseMatrix64F> engine =
-                    DecompositionFactory.chol(dim, true);
+            org.ejml.interfaces.decomposition.CholeskyDecomposition_F64<DMatrixRMaj> engine =
+                    DecompositionFactory_DDRM.chol(dim, true);
             engine.decompose(variance);
 
             return engine.getT(null);

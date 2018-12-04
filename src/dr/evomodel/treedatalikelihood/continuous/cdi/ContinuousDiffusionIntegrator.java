@@ -28,7 +28,7 @@ package dr.evomodel.treedatalikelihood.continuous.cdi;
 import dr.evomodel.treedatalikelihood.preorder.BranchSufficientStatistics;
 import dr.math.matrixAlgebra.WrappedVector;
 import dr.xml.Reportable;
-import org.ejml.data.DenseMatrix64F;
+import org.ejml.data.DMatrixRMaj;
 
 import java.util.Arrays;
 
@@ -125,7 +125,7 @@ public interface ContinuousDiffusionIntegrator extends Reportable {
 
     int getDimProcess();
 
-    void getPrecisionPreOrderDerivative(BranchSufficientStatistics statistics, DenseMatrix64F gradient);
+    void getPrecisionPreOrderDerivative(BranchSufficientStatistics statistics, DMatrixRMaj gradient);
 
     class Basic implements ContinuousDiffusionIntegrator {
 
@@ -625,7 +625,7 @@ public interface ContinuousDiffusionIntegrator extends Reportable {
             final double vi = branchLengths[imo];
             final double vj = branchLengths[jmo];
 //
-//            final DenseMatrix64F Vd = wrap(inverseDiffusions, precisionOffset, dimTrait, dimTrait);
+//            final DMatrixRMaj Vd = wrap(inverseDiffusions, precisionOffset, dimTrait, dimTrait);
 //
             if (DEBUG) {
                 System.err.println("updatePreOrderPartial for node " + iBuffer);
@@ -639,33 +639,33 @@ public interface ContinuousDiffusionIntegrator extends Reportable {
                 final double pk = preOrderPartials[kbo + dimTrait];
                 final double pj = partials[jbo + dimTrait];
 
-//                final DenseMatrix64F Pk = wrap(prePartials, kbo + dimTrait, dimTrait, dimTrait);
-//    //                final DenseMatrix64F Pj = wrap(partials, jbo + dimTrait, dimTrait, dimTrait);
+//                final DMatrixRMaj Pk = wrap(prePartials, kbo + dimTrait, dimTrait, dimTrait);
+//    //                final DMatrixRMaj Pj = wrap(partials, jbo + dimTrait, dimTrait, dimTrait);
 //
-//    //                final DenseMatrix64F Vk = wrap(prePartials, kbo + dimTrait + dimTrait * dimTrait, dimTrait, dimTrait);
-//                final DenseMatrix64F Vj = wrap(partials, jbo + dimTrait + dimTrait * dimTrait, dimTrait, dimTrait);
+//    //                final DMatrixRMaj Vk = wrap(prePartials, kbo + dimTrait + dimTrait * dimTrait, dimTrait, dimTrait);
+//                final DMatrixRMaj Vj = wrap(partials, jbo + dimTrait + dimTrait * dimTrait, dimTrait, dimTrait);
 //
 
                 // B. Inflate variance along sibling branch using matrix inversion
                 final double pjp = Double.isInfinite(pj) ?
                         1.0 / vj : pj / (1.0 + pj * vj);
 
-//    //                final DenseMatrix64F Vjp = new DenseMatrix64F(dimTrait, dimTrait);
-//                final DenseMatrix64F Vjp = matrix0;
-//                CommonOps.add(Vj, vj, Vd, Vjp);
+//    //                final DMatrixRMaj Vjp = new DMatrixRMaj(dimTrait, dimTrait);
+//                final DMatrixRMaj Vjp = matrix0;
+//                CommonOps_DDRM.add(Vj, vj, Vd, Vjp);
 //
-//    //                final DenseMatrix64F Pjp = new DenseMatrix64F(dimTrait, dimTrait);
-//                final DenseMatrix64F Pjp = matrix1;
+//    //                final DMatrixRMaj Pjp = new DMatrixRMaj(dimTrait, dimTrait);
+//                final DMatrixRMaj Pjp = matrix1;
 //                InversionResult cj = safeInvert(Vjp, Pjp, false);
 //
-//    //                final DenseMatrix64F Pip = new DenseMatrix64F(dimTrait, dimTrait);
-//                final DenseMatrix64F Pip = matrix2;
-//                CommonOps.add(Pk, Pjp, Pip);
+//    //                final DMatrixRMaj Pip = new DMatrixRMaj(dimTrait, dimTrait);
+//                final DMatrixRMaj Pip = matrix2;
+//                CommonOps_DDRM.add(Pk, Pjp, Pip);
 
                 final double pip = pjp + pk;
 //
-//    //                final DenseMatrix64F Vip = new DenseMatrix64F(dimTrait, dimTrait);
-//                final DenseMatrix64F Vip = matrix3;
+//    //                final DMatrixRMaj Vip = new DMatrixRMaj(dimTrait, dimTrait);
+//                final DMatrixRMaj Vip = matrix3;
 //                InversionResult cip = safeInvert(Pip, Vip, false);
 //
 //                // C. Compute prePartial mean
@@ -701,11 +701,11 @@ public interface ContinuousDiffusionIntegrator extends Reportable {
                 final double pi  = Double.isInfinite(pip) ?
                         1.0 / vi : pip / (1.0 + pip * vi);
 
-//                final DenseMatrix64F Vi = Vip;
-//                CommonOps.add(vi, Vd, Vip, Vi);
+//                final DMatrixRMaj Vi = Vip;
+//                CommonOps_DDRM.add(vi, Vd, Vip, Vi);
 //
-//    //                final DenseMatrix64F Pi = new DenseMatrix64F(dimTrait, dimTrait);
-//                final DenseMatrix64F Pi = matrix4;
+//    //                final DMatrixRMaj Pi = new DMatrixRMaj(dimTrait, dimTrait);
+//                final DMatrixRMaj Pi = matrix4;
 //                InversionResult ci = safeInvert(Vi, Pi, false);
 //
 //                // X. Store precision results for node
@@ -968,7 +968,7 @@ public interface ContinuousDiffusionIntegrator extends Reportable {
             return sb.toString();
         }
 
-        public void getPrecisionPreOrderDerivative(BranchSufficientStatistics statistics, DenseMatrix64F gradient) {
+        public void getPrecisionPreOrderDerivative(BranchSufficientStatistics statistics, DMatrixRMaj gradient) {
             throw new RuntimeException("Not implemented for unsafe integrators.");
         }
 

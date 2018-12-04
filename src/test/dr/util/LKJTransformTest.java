@@ -32,8 +32,8 @@ import dr.util.CorrelationToCholesky;
 import dr.util.LKJCholeskyTransformConstrained;
 import dr.util.LKJTransformConstrained;
 import dr.util.Transform;
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.ops.CommonOps;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
 import test.dr.inference.trace.TraceCorrelationAssert;
 
 import java.text.NumberFormat;
@@ -379,12 +379,12 @@ public class LKJTransformTest extends TraceCorrelationAssert {
                 format.format(jacobianDetCorrToCPCComp));
 
         // Matrices
-        DenseMatrix64F jacobianMatCholToCPC = new DenseMatrix64F(transformChol.computeJacobianMatrixInverse(CPCs));
-        DenseMatrix64F jacobianMatCorrToChol = new DenseMatrix64F(transformCorrToChol.computeJacobianMatrixInverse(cholValues));
-        DenseMatrix64F jacobianMatCorrToCPC = new DenseMatrix64F(transform.computeJacobianMatrixInverse(CPCs));
+        DMatrixRMaj jacobianMatCholToCPC = new DMatrixRMaj(transformChol.computeJacobianMatrixInverse(CPCs));
+        DMatrixRMaj jacobianMatCorrToChol = new DMatrixRMaj(transformCorrToChol.computeJacobianMatrixInverse(cholValues));
+        DMatrixRMaj jacobianMatCorrToCPC = new DMatrixRMaj(transform.computeJacobianMatrixInverse(CPCs));
 
-        DenseMatrix64F jacobianMatComposition = new DenseMatrix64F(jacobianMatCorrToCPC.numRows, jacobianMatCorrToCPC.numCols);
-        CommonOps.mult(jacobianMatCholToCPC, jacobianMatCorrToChol, jacobianMatComposition);
+        DMatrixRMaj jacobianMatComposition = new DMatrixRMaj(jacobianMatCorrToCPC.numRows, jacobianMatCorrToCPC.numCols);
+        CommonOps_DDRM.mult(jacobianMatCholToCPC, jacobianMatCorrToChol, jacobianMatComposition);
 
         System.out.println("Jacobiant Corr to CPC=" + jacobianMatCorrToCPC);
         System.out.println("Jacobiant Composition=" + jacobianMatComposition);

@@ -2,7 +2,7 @@ package test.dr.math.matrixAlgebra.missingData;
 
 import dr.math.matrixAlgebra.missingData.InversionResult;
 import dr.math.matrixAlgebra.missingData.MissingOps;
-import org.ejml.data.DenseMatrix64F;
+import org.ejml.data.DMatrixRMaj;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -19,7 +19,7 @@ public class MissingOpsTest {
 
         double getLogDet();
 
-        DenseMatrix64F getMatrix();
+        DMatrixRMaj getMatrix();
 
         abstract class Basic implements Instance {
 
@@ -35,8 +35,8 @@ public class MissingOpsTest {
             return 42.160726233513714;
         }
 
-        public DenseMatrix64F getMatrix() {
-            return new DenseMatrix64F(2, 2, true,
+        public DMatrixRMaj getMatrix() {
+            return new DMatrixRMaj(2, 2, true,
                     0.004255873897787696, 0.010962329615067505,
                            0.010962329615067505, 0.02823689645782389);
         }
@@ -51,8 +51,8 @@ public class MissingOpsTest {
             return 42.56618093096408;
         }
 
-        public DenseMatrix64F getMatrix() {
-            return new DenseMatrix64F(2, 2, true,
+        public DMatrixRMaj getMatrix() {
+            return new DMatrixRMaj(2, 2, true,
                     0.004255918204391931, 0.010962443740752292,
                            0.010962443740752292, 0.028237190424652364);
         }
@@ -68,7 +68,7 @@ public class MissingOpsTest {
             int rank_test = test.getRank();
             double logDet_test = test.getLogDet();
 
-            DenseMatrix64F P = test.getMatrix();
+            DMatrixRMaj P = test.getMatrix();
 
             InversionResult c = MissingOps.safeDeterminant(P, false);
 

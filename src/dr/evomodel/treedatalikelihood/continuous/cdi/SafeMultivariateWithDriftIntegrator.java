@@ -1,7 +1,7 @@
 package dr.evomodel.treedatalikelihood.continuous.cdi;
 
 import dr.math.matrixAlgebra.WrappedVector;
-import org.ejml.data.DenseMatrix64F;
+import org.ejml.data.DMatrixRMaj;
 
 import static dr.math.matrixAlgebra.missingData.MissingOps.*;
 
@@ -178,11 +178,11 @@ public class SafeMultivariateWithDriftIntegrator extends SafeMultivariateIntegra
 
     @Override
     double computeSS(final int ibo,
-                     final DenseMatrix64F Pip,
+                     final DMatrixRMaj Pip,
                      final int jbo,
-                     final DenseMatrix64F Pjp,
+                     final DMatrixRMaj Pjp,
                      final int kbo,
-                     final DenseMatrix64F Pk,
+                     final DMatrixRMaj Pk,
                      final int dimTrait) {
         return weightedThreeInnerProduct(vectorDispi, 0, Pip,
                 vectorDispj, 0, Pjp,

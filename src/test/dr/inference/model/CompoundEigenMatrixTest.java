@@ -4,11 +4,11 @@ import dr.inference.model.CompoundEigenMatrix;
 import dr.inference.model.MatrixParameter;
 import dr.inference.model.Parameter;
 import dr.math.matrixAlgebra.missingData.MissingOps;
-import org.ejml.data.Complex64F;
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.factory.DecompositionFactory;
-import org.ejml.interfaces.decomposition.EigenDecomposition;
-import org.ejml.ops.EigenOps;
+import org.ejml.data.Complex_F64;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.EigenOps_DDRM;
+import org.ejml.dense.row.factory.DecompositionFactory_DDRM;
+import org.ejml.interfaces.decomposition.EigenDecomposition_F64;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -30,22 +30,22 @@ public class CompoundEigenMatrixTest {
 
         abstract class Basic implements Instance {
 
-            private EigenDecomposition decomposeStrenghtOfSelection(double[] Aparam) {
+            private EigenDecomposition_F64 decomposeStrenghtOfSelection(double[] Aparam) {
                 int n = getDimTrait();
-                DenseMatrix64F A = MissingOps.wrap(Aparam, 0, n, n);
+                DMatrixRMaj A = MissingOps.wrap(Aparam, 0, n, n);
                 // Decomposition
-                EigenDecomposition eigA = DecompositionFactory.eig(n, true, false);
+                EigenDecomposition_F64 eigA = DecompositionFactory_DDRM.eig(n, true, false);
                 if (!eigA.decompose(A)) throw new RuntimeException("Eigen decomposition failed.");
                 return eigA;
             }
 
-            final EigenDecomposition eigenDecompositionStrengthOfSelection = decomposeStrenghtOfSelection(getSelectionStrength());
+            final EigenDecomposition_F64 eigenDecompositionStrengthOfSelection = decomposeStrenghtOfSelection(getSelectionStrength());
 
             public Parameter getEigenValuesStrengthOfSelection() {
                 int dim = getDimTrait();
                 double[] eigA = new double[dim];
                 for (int p = 0; p < dim; ++p) {
-                    Complex64F ev = eigenDecompositionStrengthOfSelection.getEigenvalue(p);
+                    Complex_F64 ev = eigenDecompositionStrengthOfSelection.getEigenvalue(p);
                     if (!ev.isReal())
                         throw new RuntimeException("Selection strength A should only have real eigenvalues.");
                     eigA[p] = ev.real;
@@ -55,7 +55,7 @@ public class CompoundEigenMatrixTest {
 
             public MatrixParameter getEigenVectorsStrengthOfSelection() {
                 int dim = getDimTrait();
-                DenseMatrix64F V = EigenOps.createMatrixV(eigenDecompositionStrengthOfSelection);
+                DMatrixRMaj V = EigenOps_DDRM.createMatrixV(eigenDecompositionStrengthOfSelection);
 
                 Parameter[] eigenVectors = new Parameter[getDimTrait()];
                 double[] column = new double[dim - 1];
@@ -143,9 +143,9 @@ public class CompoundEigenMatrixTest {
 
         public double[] getSelectionStrength() {
             return new double[]{
-                      5.635055,  0.84322690,  2.200631,  1.6066434,
-                     -2.123113, -0.07568064, -0.879367, -0.7606432,
-                     -3.900102, -0.54334995, -1.397044, -1.1259163,
+                    5.635055, 0.84322690, 2.200631, 1.6066434,
+                    -2.123113, -0.07568064, -0.879367, -0.7606432,
+                    -3.900102, -0.54334995, -1.397044, -1.1259163,
                     -11.481042, -1.89373481, -4.613851, -3.1623302
             };
         }

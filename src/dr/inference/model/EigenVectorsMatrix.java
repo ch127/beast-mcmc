@@ -25,8 +25,8 @@
 
 package dr.inference.model;
 
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.ops.NormOps;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.NormOps_DDRM;
 
 import static dr.math.matrixAlgebra.missingData.MissingOps.wrapSpherical;
 
@@ -38,7 +38,7 @@ public class EigenVectorsMatrix extends MatrixParameter {
 
     @Override
     public boolean check(){
-        DenseMatrix64F M = wrapSpherical(getParameterValues(), 0, getColumnDimension());
-        return NormOps.conditionP2(M) < 1.0E8;
+        DMatrixRMaj M = wrapSpherical(getParameterValues(), 0, getColumnDimension());
+        return NormOps_DDRM.conditionP2(M) < 1.0E8;
     }
 }

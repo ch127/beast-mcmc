@@ -30,10 +30,10 @@ import dr.evolution.tree.TreeAttributeProvider;
 import dr.evomodel.substmodel.EigenDecomposition;
 import dr.inference.model.*;
 import dr.math.matrixAlgebra.missingData.MissingOps;
-import org.ejml.data.Complex64F;
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.factory.DecompositionFactory;
-import org.ejml.ops.EigenOps;
+import org.ejml.data.Complex_F64;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.EigenOps_DDRM;
+import org.ejml.dense.row.factory.DecompositionFactory_DDRM;
 
 /**
  * @author Marc Suchard
@@ -179,19 +179,19 @@ public class MultivariateElasticModel extends AbstractModel implements TreeAttri
         GENERAL {
             @Override
             public EigenDecomposition decomposeStrenghtOfSelection(MatrixParameterInterface AParam, int dim, boolean isSymmetric) {
-                DenseMatrix64F A = MissingOps.wrap(AParam);
-                org.ejml.interfaces.decomposition.EigenDecomposition eigA = DecompositionFactory.eig(dim, true, isSymmetric);
+                DMatrixRMaj A = MissingOps.wrap(AParam);
+                org.ejml.interfaces.decomposition.EigenDecomposition_F64 eigA = DecompositionFactory_DDRM.eig(dim, true, isSymmetric);
                 if (!eigA.decompose(A)) throw new RuntimeException("Eigen decomposition failed.");
                 return new EigenDecomposition(eigenVectorsMatrix(eigA),
                         null,
                         eigenValuesMatrix(eigA, dim));
             }
 
-            private double[] eigenValuesMatrix(org.ejml.interfaces.decomposition.EigenDecomposition eigDecompA, int dim) {
+            private double[] eigenValuesMatrix(org.ejml.interfaces.decomposition.EigenDecomposition_F64 eigDecompA, int dim) {
                 assert eigDecompA != null : "The eigen decomposition should already be computed at this point.";
                 double[] eigA = new double[dim];
                 for (int p = 0; p < dim; ++p) {
-                    Complex64F ev = eigDecompA.getEigenvalue(p);
+                    Complex_F64 ev = eigDecompA.getEigenvalue(p);
                     assert ev.isReal() : "Selection strength A should only have real eigenvalues.";
                     assert ev.real > 0 : "Selection strength A should only have positive real eigenvalues.";
                     eigA[p] = ev.real;
@@ -199,9 +199,9 @@ public class MultivariateElasticModel extends AbstractModel implements TreeAttri
                 return eigA;
             }
 
-            private double[] eigenVectorsMatrix(org.ejml.interfaces.decomposition.EigenDecomposition eigDecompA) {
+            private double[] eigenVectorsMatrix(org.ejml.interfaces.decomposition.EigenDecomposition_F64 eigDecompA) {
                 assert eigDecompA != null : "The eigen decomposition should already be computed at this point.";
-                return EigenOps.createMatrixV(eigDecompA).getData();
+                return EigenOps_DDRM.createMatrixV(eigDecompA).getData();
             }
         };
 

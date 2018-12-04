@@ -44,8 +44,8 @@ import dr.math.MultivariateFunction;
 import dr.math.NumericalDerivative;
 import dr.math.matrixAlgebra.WrappedVector;
 import dr.xml.Reportable;
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.ops.CommonOps;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
 
 import java.util.List;
 
@@ -66,9 +66,9 @@ public class BranchRateGradient implements GradientWrtParameterProvider, Reporta
     private final ArbitraryBranchRates branchRateModel;
     private final ContinuousTraitGradientForBranch branchProvider;
 
-//    private final DenseMatrix64F matrix0;
-//    private final DenseMatrix64F matrix1;
-//    private final DenseMatrix64F vector0;
+//    private final DMatrixRMaj matrix0;
+//    private final DMatrixRMaj matrix1;
+//    private final DMatrixRMaj vector0;
 
     public BranchRateGradient(String traitName,
                               TreeDataLikelihood treeDataLikelihood,
@@ -108,9 +108,9 @@ public class BranchRateGradient implements GradientWrtParameterProvider, Reporta
 
         branchProvider = new ContinuousTraitGradientForBranch.Default(dim);
 
-//        matrix0 = new DenseMatrix64F(dim, dim);
-//        matrix1 = new DenseMatrix64F(dim, dim);
-//        vector0 = new DenseMatrix64F(dim, 1);
+//        matrix0 = new DMatrixRMaj(dim, dim);
+//        matrix1 = new DMatrixRMaj(dim, dim);
+//        vector0 = new DMatrixRMaj(dim, 1);
     }
 
     @Override
@@ -177,18 +177,18 @@ public class BranchRateGradient implements GradientWrtParameterProvider, Reporta
 
         class Default implements ContinuousTraitGradientForBranch {
 
-            private final DenseMatrix64F matrix0;
-            private final DenseMatrix64F matrix1;
-            private final DenseMatrix64F vector0;
+            private final DMatrixRMaj matrix0;
+            private final DMatrixRMaj matrix1;
+            private final DMatrixRMaj vector0;
 
             private final int dim;
 
             public Default(int dim) {
                 this.dim = dim;
 
-                matrix0 = new DenseMatrix64F(dim, dim);
-                matrix1 = new DenseMatrix64F(dim, dim);
-                vector0 = new DenseMatrix64F(dim, 1);
+                matrix0 = new DMatrixRMaj(dim, dim);
+                matrix1 = new DMatrixRMaj(dim, dim);
+                vector0 = new DMatrixRMaj(dim, 1);
             }
 
             @Override
@@ -202,17 +202,17 @@ public class BranchRateGradient implements GradientWrtParameterProvider, Reporta
                     System.err.println("B = " + statistics.toVectorizedString());
                 }
 
-                DenseMatrix64F Qi = parent.getRawPrecision();
-                DenseMatrix64F Si = matrix1; //new DenseMatrix64F(dim, dim); // matrix1;
-                CommonOps.scale(differentialScaling, branch.getRawVariance(), Si);
+                DMatrixRMaj Qi = parent.getRawPrecision();
+                DMatrixRMaj Si = matrix1; //new DMatrixRMaj(dim, dim); // matrix1;
+                CommonOps_DDRM.scale(differentialScaling, branch.getRawVariance(), Si);
 
                 if (DEBUG) {
                     System.err.println("\tQi = " + NormalSufficientStatistics.toVectorizedString(Qi));
                     System.err.println("\tSi = " + NormalSufficientStatistics.toVectorizedString(Si));
                 }
 
-                DenseMatrix64F logDetComponent = matrix0; //new DenseMatrix64F(dim, dim); //matrix0;
-                CommonOps.mult(Qi, Si, logDetComponent);
+                DMatrixRMaj logDetComponent = matrix0; //new DMatrixRMaj(dim, dim); //matrix0;
+                CommonOps_DDRM.mult(Qi, Si, logDetComponent);
 
                 double grad1 = 0.0;
                 for (int row = 0; row < dim; ++row) {
@@ -223,8 +223,8 @@ public class BranchRateGradient implements GradientWrtParameterProvider, Reporta
                     System.err.println("grad1 = " + grad1);
                 }
 
-                DenseMatrix64F quadraticComponent = matrix1; //new DenseMatrix64F(dim, dim); //matrix1;
-                CommonOps.mult(logDetComponent, Qi, quadraticComponent);
+                DMatrixRMaj quadraticComponent = matrix1; //new DMatrixRMaj(dim, dim); //matrix1;
+                CommonOps_DDRM.mult(logDetComponent, Qi, quadraticComponent);
 
                 if (DEBUG) {
                     System.err.println("\tQi = " + NormalSufficientStatistics.toVectorizedString(Qi));
@@ -233,10 +233,10 @@ public class BranchRateGradient implements GradientWrtParameterProvider, Reporta
 
                 NormalSufficientStatistics jointStatistics = computeJointStatistics(child, parent);
 
-                DenseMatrix64F additionalVariance = matrix0; //new DenseMatrix64F(dim, dim);
-                CommonOps.mult(quadraticComponent, jointStatistics.getRawVariance(), additionalVariance);
+                DMatrixRMaj additionalVariance = matrix0; //new DMatrixRMaj(dim, dim);
+                CommonOps_DDRM.mult(quadraticComponent, jointStatistics.getRawVariance(), additionalVariance);
 
-                DenseMatrix64F delta = vector0;
+                DMatrixRMaj delta = vector0;
                 for (int row = 0; row < dim; ++row) {
                     delta.unsafe_set(row, 0,
                             jointStatistics.getRawMean().unsafe_get(row, 0) - parent.getMean(row)
@@ -270,8 +270,8 @@ public class BranchRateGradient implements GradientWrtParameterProvider, Reporta
 
                 // W.r.t. drift
                 // TODO: Fix delegate to (possibly) un-link drift from arbitrary rate
-                DenseMatrix64F Di = new DenseMatrix64F(dim, 1);
-                CommonOps.scale(differentialScaling, branch.getRawMean(), Di);
+                DMatrixRMaj Di = new DMatrixRMaj(dim, 1);
+                CommonOps_DDRM.scale(differentialScaling, branch.getRawMean(), Di);
 
                 double grad3 = 0.0;
                 for (int row = 0; row < dim; ++row) {
@@ -296,13 +296,13 @@ public class BranchRateGradient implements GradientWrtParameterProvider, Reporta
             private NormalSufficientStatistics computeJointStatistics(NormalSufficientStatistics child,
                                                                       NormalSufficientStatistics parent) {
 
-                DenseMatrix64F totalP = new DenseMatrix64F(dim, dim);
-                CommonOps.add(child.getRawPrecision(), parent.getRawPrecision(), totalP);
+                DMatrixRMaj totalP = new DMatrixRMaj(dim, dim);
+                CommonOps_DDRM.add(child.getRawPrecision(), parent.getRawPrecision(), totalP);
 
-                DenseMatrix64F totalV = new DenseMatrix64F(dim, dim);
+                DMatrixRMaj totalV = new DMatrixRMaj(dim, dim);
                 safeInvert(totalP, totalV, false);
 
-                DenseMatrix64F mean = new DenseMatrix64F(dim, 1);
+                DMatrixRMaj mean = new DMatrixRMaj(dim, 1);
                 safeWeightedAverage(
                         new WrappedVector.Raw(child.getRawMean().getData(), 0, dim),
                         child.getRawPrecision(),

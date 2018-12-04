@@ -40,7 +40,7 @@ import dr.math.matrixAlgebra.Vector;
 import dr.math.matrixAlgebra.WrappedVector;
 import dr.math.matrixAlgebra.missingData.InversionResult;
 import dr.xml.*;
-import org.ejml.data.DenseMatrix64F;
+import org.ejml.data.DMatrixRMaj;
 
 import java.util.*;
 
@@ -299,13 +299,13 @@ public class IntegratedFactorAnalysisLikelihood extends AbstractModelLikelihood
         }
     }
 
-    private void computePrecisionForTaxon(final DenseMatrix64F precision, final int taxon,
+    private void computePrecisionForTaxon(final DMatrixRMaj precision, final int taxon,
                                            final int numFactors) {
 
         final double[] observed = observedIndicators[taxon];
 
         final HashedMissingArray observedArray;
-        DenseMatrix64F hashedPrecision;
+        DMatrixRMaj hashedPrecision;
 
         if (USE_CACHE) {
             observedArray = new HashedMissingArray(observed);
@@ -343,10 +343,10 @@ public class IntegratedFactorAnalysisLikelihood extends AbstractModelLikelihood
 
     private static final boolean USE_CACHE = false;
 
-    private Map<HashedMissingArray, DenseMatrix64F> precisionMatrixMap =
-            new HashMap<HashedMissingArray, DenseMatrix64F>();
+    private Map<HashedMissingArray, DMatrixRMaj> precisionMatrixMap =
+            new HashMap<HashedMissingArray, DMatrixRMaj>();
 
-    private InversionResult fillInMeanForTaxon(final WrappedVector output, final DenseMatrix64F precision,
+    private InversionResult fillInMeanForTaxon(final WrappedVector output, final DMatrixRMaj precision,
                                                final int taxon) {
 
         final double[] observed = observedIndicators[taxon];
@@ -367,8 +367,8 @@ public class IntegratedFactorAnalysisLikelihood extends AbstractModelLikelihood
             tmp[row] = sum;
         }
 
-        DenseMatrix64F B = DenseMatrix64F.wrap(numFactors, 1, tmp);
-        DenseMatrix64F X = DenseMatrix64F.wrap(numFactors, 1, tmp2);
+        DMatrixRMaj B = DMatrixRMaj.wrap(numFactors, 1, tmp);
+        DMatrixRMaj X = DMatrixRMaj.wrap(numFactors, 1, tmp2);
 
         InversionResult ci = safeSolve(precision, B, X, true);
 
@@ -392,7 +392,7 @@ public class IntegratedFactorAnalysisLikelihood extends AbstractModelLikelihood
         return sum;
     }
 
-    private double computeFactorInnerProduct(final WrappedVector mean, final DenseMatrix64F precision) {
+    private double computeFactorInnerProduct(final WrappedVector mean, final DMatrixRMaj precision) {
         // Compute \mu_i^t P_i \mu^t
         double sum = 0;
         for (int row = 0; row < numFactors; ++row) {
@@ -432,7 +432,7 @@ public class IntegratedFactorAnalysisLikelihood extends AbstractModelLikelihood
         return logDet;
     }
 
-    private void makeCompletedUnobserved(final DenseMatrix64F matrix, double diagonal) {
+    private void makeCompletedUnobserved(final DMatrixRMaj matrix, double diagonal) {
         for (int row = 0; row < numFactors; ++row) {
             for (int col = 0; col < numFactors; ++col) {
                 double x = (row == col) ? diagonal : 0.0;
@@ -442,8 +442,8 @@ public class IntegratedFactorAnalysisLikelihood extends AbstractModelLikelihood
     }
 
     private void computePartialAndRemainderForOneTaxon(int taxon,
-                                                       DenseMatrix64F precision,
-                                                       DenseMatrix64F variance) {
+                                                       DMatrixRMaj precision,
+                                                       DMatrixRMaj variance) {
 
         final int partialsOffset = dimPartial * taxon;
         // Work with mean in-place
@@ -518,12 +518,12 @@ public class IntegratedFactorAnalysisLikelihood extends AbstractModelLikelihood
 
     private void computePartialsAndRemainders() {
 
-        final DenseMatrix64F[] precisions = new DenseMatrix64F[taxonTaskPool.getNumThreads()];
-        final DenseMatrix64F[] variances = new DenseMatrix64F[taxonTaskPool.getNumThreads()];
+        final DMatrixRMaj[] precisions = new DMatrixRMaj[taxonTaskPool.getNumThreads()];
+        final DMatrixRMaj[] variances = new DMatrixRMaj[taxonTaskPool.getNumThreads()];
 
         for (int i = 0; i < taxonTaskPool.getNumThreads(); ++i) {
-            precisions[i] = new DenseMatrix64F(numFactors, numFactors);
-            variances[i] = new DenseMatrix64F(numFactors, numFactors);
+            precisions[i] = new DMatrixRMaj(numFactors, numFactors);
+            variances[i] = new DMatrixRMaj(numFactors, numFactors);
         }
 
         if (USE_CACHE) {

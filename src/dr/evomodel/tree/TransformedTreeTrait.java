@@ -7,7 +7,7 @@ import dr.inference.model.AbstractModel;
 import dr.inference.model.Model;
 import dr.inference.model.Parameter;
 import dr.inference.model.Variable;
-import org.ejml.data.DenseMatrix64F;
+import org.ejml.data.DMatrixRMaj;
 
 import java.util.List;
 
@@ -86,12 +86,12 @@ abstract class TransformedTreeTrait extends AbstractModel implements TreeTrait<d
         }
 
         void updateTransform() {
-            DenseMatrix64F sentinel = getSentinelValue();
+            DMatrixRMaj sentinel = getSentinelValue();
 
             linearOperator = null; // TODO use firstValue
         }
 
-        private DenseMatrix64F getSentinelValue() {
+        private DMatrixRMaj getSentinelValue() {
 
             double[][] value = new double[dim][];
 
@@ -99,7 +99,7 @@ abstract class TransformedTreeTrait extends AbstractModel implements TreeTrait<d
                 value[i] = baseTrait.getTrait(sentinelTree, sentinelTree.getExternalNode(i));
             }
 
-            return new DenseMatrix64F(value);
+            return new DMatrixRMaj(value);
         }
 
         private final Tree sentinelTree;
@@ -171,5 +171,5 @@ abstract class TransformedTreeTrait extends AbstractModel implements TreeTrait<d
     private final List<Tree> trees;
     private boolean transformKnown;
 
-    private DenseMatrix64F linearOperator;
+    private DMatrixRMaj linearOperator;
 }

@@ -31,8 +31,8 @@ import dr.evomodel.continuous.MultivariateDiffusionModel;
 import dr.evomodel.continuous.MultivariateElasticModel;
 import dr.evomodel.treedatalikelihood.continuous.cdi.ContinuousDiffusionIntegrator;
 import dr.inference.model.Model;
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.ops.CommonOps;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
 
 import java.util.List;
 
@@ -131,7 +131,7 @@ public class OUDiffusionModelDelegate extends AbstractDriftDiffusionModelDelegat
     }
 
     @Override
-    public void getGradientPrecision(double scalar, DenseMatrix64F gradient) {
+    public void getGradientPrecision(double scalar, DMatrixRMaj gradient) {
         throw new RuntimeException("not yet implemented");
     }
 
@@ -159,15 +159,15 @@ public class OUDiffusionModelDelegate extends AbstractDriftDiffusionModelDelegat
                                             final double[][] traitVariance) {
 
         double[] eigVals = this.getEigenValuesStrengthOfSelection();
-        DenseMatrix64F V = wrap(this.getEigenVectorsStrengthOfSelection(), 0, dim, dim);
-        DenseMatrix64F Vinv = new DenseMatrix64F(dim, dim);
-        CommonOps.invert(V, Vinv);
+        DMatrixRMaj V = wrap(this.getEigenVectorsStrengthOfSelection(), 0, dim, dim);
+        DMatrixRMaj Vinv = new DMatrixRMaj(dim, dim);
+        CommonOps_DDRM.invert(V, Vinv);
 
-        DenseMatrix64F transTraitVariance = new DenseMatrix64F(traitVariance);
+        DMatrixRMaj transTraitVariance = new DMatrixRMaj(traitVariance);
 
-        DenseMatrix64F tmp = new DenseMatrix64F(dim, dim);
-        CommonOps.mult(Vinv, transTraitVariance, tmp);
-        CommonOps.multTransB(tmp, Vinv, transTraitVariance);
+        DMatrixRMaj tmp = new DMatrixRMaj(dim, dim);
+        CommonOps_DDRM.mult(Vinv, transTraitVariance, tmp);
+        CommonOps_DDRM.multTransB(tmp, Vinv, transTraitVariance);
 
         // inverse of eigenvalues
         double[][] invEigVals = new double[dim][dim];
@@ -184,7 +184,7 @@ public class OUDiffusionModelDelegate extends AbstractDriftDiffusionModelDelegat
         double tij;
         double ep;
         double eq;
-        DenseMatrix64F varTemp = new DenseMatrix64F(dim, dim);
+        DMatrixRMaj varTemp = new DMatrixRMaj(dim, dim);
         double[][] jointVariance = new double[dim * ntaxa][dim * ntaxa];
         for (int i = 0; i < ntaxa; ++i) {
             for (int j = 0; j < ntaxa; ++j) {
@@ -198,8 +198,8 @@ public class OUDiffusionModelDelegate extends AbstractDriftDiffusionModelDelegat
                         varTemp.set(p, q, Math.exp(-ep * ti) * Math.exp(-eq * tj) * (invEigVals[p][q] * (Math.exp((ep + eq) * tij) - 1) + 1 / priorSampleSize) * transTraitVariance.get(p, q));
                     }
                 }
-                CommonOps.mult(V, varTemp, tmp);
-                CommonOps.multTransB(tmp, V, varTemp);
+                CommonOps_DDRM.mult(V, varTemp, tmp);
+                CommonOps_DDRM.multTransB(tmp, V, varTemp);
                 for (int p = 0; p < dim; ++p) {
                     for (int q = 0; q < dim; ++q) {
                         jointVariance[i * dim + p][j * dim + q] = varTemp.get(p, q);
@@ -223,7 +223,7 @@ public class OUDiffusionModelDelegate extends AbstractDriftDiffusionModelDelegat
         double ep;
         double eq;
         double var;
-        DenseMatrix64F varTemp = new DenseMatrix64F(dim, dim);
+        DMatrixRMaj varTemp = new DMatrixRMaj(dim, dim);
         double[][] jointVariance = new double[dim * ntaxa][dim * ntaxa];
         for (int i = 0; i < ntaxa; ++i) {
             for (int j = 0; j < ntaxa; ++j) {

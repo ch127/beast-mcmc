@@ -1,7 +1,7 @@
 package dr.evomodel.treedatalikelihood.continuous.cdi;
 
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.ops.CommonOps;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
 
 import java.util.Arrays;
 
@@ -265,11 +265,10 @@ public class SafeMultivariateDiagonalActualizedWithDriftIntegrator extends SafeM
                                                final double[] destination,
                                                final int offset,
                                                final int dim) {
-        DenseMatrix64F sourceMatrix = wrap(source, offset, dim, dim);
-        DenseMatrix64F destinationMatrix = new DenseMatrix64F(dim, dim);
+        DMatrixRMaj sourceMatrix = wrap(source, offset, dim, dim);
+        DMatrixRMaj destinationMatrix = new DMatrixRMaj(dim, dim);
 
-//        CommonOps.invert(sourceMatrix, destinationMatrix);
-        symmPosDefInvert(sourceMatrix, destinationMatrix);
+        CommonOps_DDRM.invertSPD(sourceMatrix, destinationMatrix);
 
         unwrap(destinationMatrix, destination, offset);
     }
@@ -300,7 +299,7 @@ public class SafeMultivariateDiagonalActualizedWithDriftIntegrator extends SafeM
 //    }
 
     @Override
-    void actualizePrecision(DenseMatrix64F Pjp, DenseMatrix64F QjPjp, int jbo, int jmo, int jdo) {
+    void actualizePrecision(DMatrixRMaj Pjp, DMatrixRMaj QjPjp, int jbo, int jmo, int jdo) {
         final double[] diagQdj = vectorDiagQdj;
         System.arraycopy(diagonalActualizations, jdo, diagQdj, 0, dimTrait);
         diagonalProduct(Pjp, diagQdj, QjPjp);
@@ -308,7 +307,7 @@ public class SafeMultivariateDiagonalActualizedWithDriftIntegrator extends SafeM
     }
 
     @Override
-    void actualizeVariance(DenseMatrix64F Vip, int ibo, int imo, int ido) {
+    void actualizeVariance(DMatrixRMaj Vip, int ibo, int imo, int ido) {
         final double[] diagQdi = vectorDiagQdi;
         System.arraycopy(diagonalActualizations, ido, diagQdi, 0, dimTrait);
         diagonalDoubleProduct(Vip, diagQdi, Vip);
@@ -336,18 +335,18 @@ public class SafeMultivariateDiagonalActualizedWithDriftIntegrator extends SafeM
 
     @Override
     void computePartialPrecision(int ido, int jdo, int imo, int jmo,
-                                 DenseMatrix64F Pip, DenseMatrix64F Pjp, DenseMatrix64F Pk) {
+                                 DMatrixRMaj Pip, DMatrixRMaj Pjp, DMatrixRMaj Pk) {
 
         final double[] diagQdi = vectorDiagQdi;
         System.arraycopy(diagonalActualizations, ido, diagQdi, 0, dimTrait);
         final double[] diagQdj = vectorDiagQdj;
         System.arraycopy(diagonalActualizations, jdo, diagQdj, 0, dimTrait);
 
-        final DenseMatrix64F QdiPipQdi = matrix0;
-        final DenseMatrix64F QdjPjpQdj = matrix1;
+        final DMatrixRMaj QdiPipQdi = matrix0;
+        final DMatrixRMaj QdjPjpQdj = matrix1;
         diagonalDoubleProduct(Pip, diagQdi, QdiPipQdi);
         diagonalDoubleProduct(Pjp, diagQdj, QdjPjpQdj);
-        CommonOps.add(QdiPipQdi, QdjPjpQdj, Pk);
+        CommonOps_DDRM.add(QdiPipQdi, QdjPjpQdj, Pk);
 
         if (DEBUG) {
             System.err.println("Qdi: " + Arrays.toString(diagQdi));
@@ -367,8 +366,8 @@ public class SafeMultivariateDiagonalActualizedWithDriftIntegrator extends SafeM
                 dimTrait, out);
     }
 
-    private static void diagonalDoubleProduct(DenseMatrix64F source, double[] diagonalScales,
-                                              DenseMatrix64F destination) {
+    private static void diagonalDoubleProduct(DMatrixRMaj source, double[] diagonalScales,
+                                              DMatrixRMaj destination) {
         double[] scales = new double[diagonalScales.length * diagonalScales.length];
         diagonalToMatrixDouble(diagonalScales, scales);
 
@@ -386,8 +385,8 @@ public class SafeMultivariateDiagonalActualizedWithDriftIntegrator extends SafeM
         }
     }
 
-    private static void diagonalProduct(DenseMatrix64F source, double[] diagonalScales,
-                                        DenseMatrix64F destination) {
+    private static void diagonalProduct(DMatrixRMaj source, double[] diagonalScales,
+                                        DMatrixRMaj destination) {
         double[] scales = new double[diagonalScales.length * diagonalScales.length];
         diagonalToMatrix(diagonalScales, scales);
 

@@ -35,7 +35,6 @@ import dr.inference.operators.MCMCOperator;
 import dr.math.distributions.GaussianProcessRandomGenerator;
 import dr.math.distributions.MultivariateNormalDistribution;
 import dr.xml.*;
-import org.ejml.ops.CommonOps;
 
 /**
  */

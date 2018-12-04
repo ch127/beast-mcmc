@@ -40,11 +40,11 @@ import dr.math.matrixAlgebra.WrappedVector;
 import dr.math.matrixAlgebra.missingData.MissingOps;
 import dr.util.Attribute;
 import dr.util.Transform;
-import org.ejml.data.DenseMatrix64F;
+import org.ejml.data.DMatrixRMaj;
 import org.ejml.data.Matrix;
-import org.ejml.factory.DecompositionFactory;
+import org.ejml.dense.row.factory.DecompositionFactory_DDRM;
 import org.ejml.interfaces.decomposition.QRDecomposition;
-import org.ejml.ops.CommonOps;
+import org.ejml.dense.row.CommonOps_DDRM;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -238,7 +238,7 @@ public class EllipticalSliceOperator extends SimpleMetropolizedGibbsOperator imp
     private static void rotateNd(double[] x, int dim) {
 
         // Get first `dim` locations
-        DenseMatrix64F matrix = new DenseMatrix64F(dim, dim);
+        DMatrixRMaj matrix = new DMatrixRMaj(dim, dim);
         for (int row = 0; row < dim; ++row) {
             for (int col = 0; col < dim; ++col) {
                 matrix.set(row, col, x[col * dim + row]);
@@ -246,20 +246,20 @@ public class EllipticalSliceOperator extends SimpleMetropolizedGibbsOperator imp
         }
 
         // Do a QR decomposition
-        QRDecomposition<DenseMatrix64F> qr = DecompositionFactory.qr(dim, dim);
+        QRDecomposition<DMatrixRMaj> qr = DecompositionFactory_DDRM.qr(dim, dim);
         qr.decompose(matrix);
-        DenseMatrix64F qm = qr.getQ(null, true);
-        DenseMatrix64F rm = qr.getR(null, true);
+        DMatrixRMaj qm = qr.getQ(null, true);
+        DMatrixRMaj rm = qr.getR(null, true);
 
         // Reflection invariance
         if (rm.get(0,0) < 0) {
-            CommonOps.scale(-1, rm);
-            CommonOps.scale(-1, qm);
+            CommonOps_DDRM.scale(-1, rm);
+            CommonOps_DDRM.scale(-1, qm);
         }
 
         // Compute Q^{-1}
-        DenseMatrix64F qInv = new DenseMatrix64F(dim, dim);
-        CommonOps.transpose(qm, qInv);
+        DMatrixRMaj qInv = new DMatrixRMaj(dim, dim);
+        CommonOps_DDRM.transpose(qm, qInv);
 
         // Apply to each location
         for (int location = 0; location < x.length / dim; ++location) {

@@ -18,7 +18,7 @@ import dr.math.NumericalDerivative;
 import dr.math.matrixAlgebra.*;
 import dr.math.matrixAlgebra.missingData.MissingOps;
 import dr.xml.*;
-import org.ejml.data.DenseMatrix64F;
+import org.ejml.data.DMatrixRMaj;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -130,8 +130,8 @@ public class IntegratedLoadingsGradient implements GradientWrtParameterProvider,
         assert (m1.getDim() == p1.getMajorDim());
 
         final WrappedVector m12 = new WrappedVector.Raw(new double[m1.getDim()], 0, dimFactors);
-        final DenseMatrix64F p12 = new DenseMatrix64F(dimFactors, dimFactors);
-        final DenseMatrix64F v12 = new DenseMatrix64F(dimFactors, dimFactors);
+        final DMatrixRMaj p12 = new DMatrixRMaj(dimFactors, dimFactors);
+        final DMatrixRMaj v12 = new DMatrixRMaj(dimFactors, dimFactors);
 
         final WrappedMatrix wP12 = new WrappedMatrix.WrappedDenseMatrix(p12);
         final WrappedMatrix wV12 = new WrappedMatrix.WrappedDenseMatrix(v12);

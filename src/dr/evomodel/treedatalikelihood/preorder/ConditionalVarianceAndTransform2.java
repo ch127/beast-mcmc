@@ -1,8 +1,8 @@
 package dr.evomodel.treedatalikelihood.preorder;
 
 import dr.math.matrixAlgebra.WrappedVector;
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.ops.CommonOps;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
 
 import static dr.math.matrixAlgebra.missingData.MissingOps.gatherRowsAndColumns;
 
@@ -23,8 +23,8 @@ public class ConditionalVarianceAndTransform2 {
      * \bar{\Sigma} = \Sigma_{11} - \Sigma_{12}\Sigma_{22}^1\Sigma{21}
      */
 
-    final private DenseMatrix64F sBar;
-    final private DenseMatrix64F affineTransform;
+    final private DMatrixRMaj sBar;
+    final private DMatrixRMaj affineTransform;
 
     private final int[] missingIndices;
     private final int[] notMissingIndices;
@@ -36,9 +36,9 @@ public class ConditionalVarianceAndTransform2 {
     private static final boolean DEBUG = false;
 
     private double[][] cholesky = null;
-    private DenseMatrix64F sBarInv = null;
+    private DMatrixRMaj sBarInv = null;
 
-    ConditionalVarianceAndTransform2(final DenseMatrix64F variance,
+    ConditionalVarianceAndTransform2(final DMatrixRMaj variance,
                                             final int[] missingIndices, final int[] notMissingIndices) {
 
         assert (missingIndices.length + notMissingIndices.length == variance.getNumRows());
@@ -51,44 +51,44 @@ public class ConditionalVarianceAndTransform2 {
             System.err.println("variance:\n" + variance);
         }
 
-        DenseMatrix64F S22 = new DenseMatrix64F(notMissingIndices.length, notMissingIndices.length);
+        DMatrixRMaj S22 = new DMatrixRMaj(notMissingIndices.length, notMissingIndices.length);
         gatherRowsAndColumns(variance, S22, notMissingIndices, notMissingIndices);
 
         if (DEBUG) {
             System.err.println("S22:\n" + S22);
         }
 
-        DenseMatrix64F S22Inv = new DenseMatrix64F(notMissingIndices.length, notMissingIndices.length);
-        CommonOps.invert(S22, S22Inv);
+        DMatrixRMaj S22Inv = new DMatrixRMaj(notMissingIndices.length, notMissingIndices.length);
+        CommonOps_DDRM.invert(S22, S22Inv);
 
         if (DEBUG) {
             System.err.println("S22Inv:\n" + S22Inv);
         }
 
-        DenseMatrix64F S12 = new DenseMatrix64F(missingIndices.length, notMissingIndices.length);
+        DMatrixRMaj S12 = new DMatrixRMaj(missingIndices.length, notMissingIndices.length);
         gatherRowsAndColumns(variance, S12, missingIndices, notMissingIndices);
 
         if (DEBUG) {
             System.err.println("S12:\n" + S12);
         }
 
-        DenseMatrix64F S12S22Inv = new DenseMatrix64F(missingIndices.length, notMissingIndices.length);
-        CommonOps.mult(S12, S22Inv, S12S22Inv);
+        DMatrixRMaj S12S22Inv = new DMatrixRMaj(missingIndices.length, notMissingIndices.length);
+        CommonOps_DDRM.mult(S12, S22Inv, S12S22Inv);
 
         if (DEBUG) {
             System.err.println("S12S22Inv:\n" + S12S22Inv);
         }
 
-        DenseMatrix64F S12S22InvS21 = new DenseMatrix64F(missingIndices.length, missingIndices.length);
-        CommonOps.multTransB(S12S22Inv, S12, S12S22InvS21);
+        DMatrixRMaj S12S22InvS21 = new DMatrixRMaj(missingIndices.length, missingIndices.length);
+        CommonOps_DDRM.multTransB(S12S22Inv, S12, S12S22InvS21);
 
         if (DEBUG) {
             System.err.println("S12S22InvS21:\n" + S12S22InvS21);
         }
 
-        sBar = new DenseMatrix64F(missingIndices.length, missingIndices.length);
+        sBar = new DMatrixRMaj(missingIndices.length, missingIndices.length);
         gatherRowsAndColumns(variance, sBar, missingIndices, missingIndices);
-        CommonOps.subtract(sBar, S12S22InvS21, sBar);
+        CommonOps_DDRM.subtract(sBar, S12S22InvS21, sBar);
 
 
         if (DEBUG) {
@@ -141,18 +141,18 @@ public class ConditionalVarianceAndTransform2 {
         return cholesky;
     }
 
-//    public final DenseMatrix64F getAffineTransform() {
+//    public final DMatrixRMaj getAffineTransform() {
 //        return affineTransform;
 //    }
 
-    final DenseMatrix64F getConditionalVariance() {
+    final DMatrixRMaj getConditionalVariance() {
         return sBar;
     }
 
-    final DenseMatrix64F getConditionalPrecision() {
+    final DMatrixRMaj getConditionalPrecision() {
         if (sBarInv == null) {
-            sBarInv = new DenseMatrix64F(numMissing, numMissing);
-            CommonOps.invert(sBar, sBarInv);
+            sBarInv = new DMatrixRMaj(numMissing, numMissing);
+            CommonOps_DDRM.invert(sBar, sBarInv);
         }
         return sBarInv;
     }
